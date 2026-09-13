@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Astrominer</title>
+<meta name="description" content="Gioco idle di estrazione mineraria spaziale con laboratorio di ricerca.">
+<meta name="theme-color" content="#05060f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Astrominer">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+
+:root{
+  --void:#05060f;
+  --void-2:#080a1c;
+  --panel:#0d1128;
+  --panel-2:#141a3d;
+  --panel-3:#1b2350;
+  --line:#252c58;
+  --text:#e7ebff;
+  --text-dim:#8890bd;
+  --text-faint:#565f8f;
+  --accent:#22d3ee;
+  --accent-soft:rgba(34,211,238,.16);
+  --ore:#f5a524;
+  --ore-soft:rgba(245,165,36,.16);
+  --good:#34d399;
+  --good-soft:rgba(52,211,153,.14);
+  --locked:#3a4272;
+  --danger:#f87171;
+  --violet:#a78bfa;
+  --violet-soft:rgba(167,139,250,.16);
+  --shadow:0 18px 40px -18px rgba(0,0,0,.65);
+  --radius:14px;
+  color-scheme: dark;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+
+body{
+  background: radial-gradient(ellipse 120% 80% at 50% -10%, #101a3c 0%, var(--void) 55%, var(--void-2) 100%);
+  color: var(--text);
+  font-family:'Rajdhani',-apple-system,'Segoe UI',sans-serif;
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+}
+
+.starfield{
+  position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.55;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, #ffffff 100%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 15%, #ffffff 100%, transparent 100%),
+    radial-gradient(1px 1px at 60% 65%, #ffffff 100%, transparent 100%),
+    radial-gradient(1px 1px at 30% 80%, #ffffff 100%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 90% 55%, #ffffff 100%, transparent 100%),
+    radial-gradient(1px 1px at 10% 60%, #ffffff 100%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 10%, #ffffff 100%, transparent 100%),
+    radial-gradient(1px 1px at 85% 85%, #ffffff 100%, transparent 100%);
+  background-repeat:repeat;
+  background-size: 340px 340px;
+  animation: drift 90s linear infinite;
+}
+@keyframes drift{ from{ background-position:0 0; } to{ background-position:-340px 340px; } }
+
+.stage{ position:relative; z-index:1; max-width:1100px; margin:0 auto; padding: 20px 20px 56px; }
+
+/* ---------- console bar ---------- */
+.console-bar{
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:16px 20px; margin-bottom:22px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border:1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.brand{ display:flex; align-items:center; gap:10px; margin-right:auto; }
+.brand-icon{ font-size:22px; filter: drop-shadow(0 0 6px var(--accent)); }
+.brand h1{
+  font-family:'Orbitron',sans-serif; font-weight:800; font-size: clamp(18px,3vw,24px);
+  letter-spacing:.06em; margin:0; color:var(--text);
+  text-shadow: 0 0 18px var(--accent-soft);
+}
+.readouts{ display:flex; gap:22px; flex-wrap:wrap; }
+.readout{ display:flex; flex-direction:column; align-items:flex-end; min-width:96px; }
+.readout .label{ font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--text-faint); }
+.readout .value{
+  font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums;
+  font-size:20px; font-weight:600; color:var(--ore);
+  text-shadow:0 0 14px var(--ore-soft);
+}
+.readout.rate .value{ color:var(--accent); text-shadow:0 0 14px var(--accent-soft); font-size:16px; }
+.icon-btn{
+  width:38px; height:38px; border-radius:10px; border:1px solid var(--line);
+  background: var(--panel-3); color:var(--text-dim); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition: all .15s ease;
+}
+.icon-btn:hover{ color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.icon-btn:focus-visible, .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* ---------- section tabs ---------- */
+.tab-bar{ display:flex; gap:8px; margin-bottom:18px; }
+.tab-btn{
+  flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:11px 14px; border-radius:10px; border:1px solid var(--line);
+  background: var(--panel); color:var(--text-dim); cursor:pointer;
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; letter-spacing:.03em;
+  transition: all .15s ease;
+}
+.tab-btn:hover{ color:var(--text); }
+.tab-btn.active{ background: linear-gradient(180deg, var(--panel-3), var(--panel-2)); color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.tab-panel[hidden]{ display:none; }
+
+/* ---------- modules grid ---------- */
+.modules-grid{
+  display:grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr)); gap:16px;
+}
+
+.module{
+  position:relative; background: linear-gradient(165deg, var(--panel), var(--panel-2));
+  border:1px solid var(--line); border-radius: var(--radius); padding:16px;
+  box-shadow: var(--shadow); overflow:hidden;
+  border-top:3px solid hsl(var(--hue,190) 70% 55%);
+}
+.module-head{ display:flex; align-items:center; gap:9px; margin-bottom:12px; }
+.ore-chip{ width:12px; height:12px; border-radius:3px; flex:none; box-shadow:0 0 10px hsl(var(--hue,190) 70% 55% / .8); }
+.module-name{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:16.5px; margin:0; flex:1; letter-spacing:.02em; }
+.module-tier{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.08em; }
+
+.stock-row{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.stock-label{ font-size:12px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.08em; }
+.stock-value{ font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; font-weight:600; font-size:15px; margin-right:auto; }
+
+.timer-row{ margin-bottom:14px; }
+.timer-track{ height:9px; border-radius:5px; background: rgba(255,255,255,.06); overflow:hidden; border:1px solid var(--line); }
+.timer-fill{ height:100%; width:0%; background: linear-gradient(90deg, hsl(var(--hue,190) 70% 45%), hsl(var(--hue,190) 85% 62%)); transition: width .1s linear; }
+.timer-label{ display:block; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-dim); font-variant-numeric:tabular-nums; }
+
+.module-upgrades{ display:flex; flex-direction:column; gap:7px; }
+
+.btn{
+  border:1px solid var(--line); background: var(--panel-3); color:var(--text);
+  border-radius:9px; padding:8px 10px; cursor:pointer; font-family:'Rajdhani',sans-serif;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  font-size:13.5px; font-weight:600; transition: all .12s ease; text-align:left; width:100%;
+}
+.btn .btn-title{ display:flex; align-items:center; gap:5px; }
+.btn .btn-cost, .btn .btn-sub{ font-family:'JetBrains Mono',monospace; font-size:12px; font-variant-numeric:tabular-nums; color:var(--ore); }
+.btn:hover:not(:disabled){ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); transform:translateY(-1px); }
+.btn:disabled{ opacity:.42; cursor:not-allowed; }
+.btn-sell{ width:auto; flex:none; padding:6px 12px; background: var(--good-soft); border-color: var(--good); color:var(--good); }
+.btn-sell .btn-sub{ color:var(--good); }
+.btn-sell:disabled{ background:var(--panel-3); border-color:var(--line); color:var(--text-faint); }
+.btn-upgrade.auto.is-on{ background: var(--accent-soft); border-color:var(--accent); }
+.btn-upgrade.auto.is-on .btn-title{ color:var(--accent); }
+.btn-unlock{ background: var(--ore-soft); border-color:var(--ore); color:var(--ore); font-size:14px; padding:10px 12px; }
+.btn-unlock:disabled{ background:var(--panel-3); border-color:var(--line); color:var(--text-faint); }
+
+.pulse{ animation: pulse .5s ease; }
+@keyframes pulse{ 0%{ transform:scale(1);} 30%{ transform:scale(1.09);} 100%{ transform:scale(1);} }
+
+/* ---------- locked module ---------- */
+.module.locked{ border-top-color:var(--locked); }
+.module.locked .module-name{ color:var(--text-faint); letter-spacing:.15em; }
+.scan-overlay{
+  position:absolute; inset:0; pointer-events:none; opacity:.5;
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 2px, transparent 2px 4px);
+}
+.lock-body{ display:flex; flex-direction:column; gap:10px; padding-top:2px; }
+.lock-hint{ margin:0; font-size:12.5px; color:var(--text-faint); }
+.ore-chip.locked-chip{ background:var(--locked); box-shadow:none; }
+.module-tier.locked-tier{ color:var(--text-faint); }
+
+/* ---------- research lab ---------- */
+.research-intro{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
+.research-intro p{ margin:0; color:var(--text-dim); font-size:13.5px; max-width:56ch; }
+.research-progress{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--violet); white-space:nowrap; }
+
+.research-root-wrap{ display:flex; flex-direction:column; align-items:center; margin-bottom:4px; }
+.rstem{ width:2px; height:22px; background:var(--line); }
+
+.rnode{
+  position:relative; border:1px solid var(--line); border-radius:12px; padding:14px;
+  background: linear-gradient(165deg, var(--panel), var(--panel-2)); box-shadow: var(--shadow);
+  border-top:3px solid var(--branch-color, var(--accent));
+}
+.rnode.root{ max-width:320px; width:100%; border-top-color:var(--ore); }
+.rnode-head{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.rnode-dot{ width:9px; height:9px; border-radius:50%; background:var(--branch-color, var(--accent)); box-shadow:0 0 8px var(--branch-color, var(--accent)); flex:none; }
+.rnode-head h3{ margin:0; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:15px; }
+.rnode-desc{ margin:0 0 12px; font-size:12.5px; color:var(--text-dim); line-height:1.4; min-height:34px; }
+.rnode-status{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-faint); display:inline-flex; align-items:center; gap:6px; }
+.rnode.purchased .rnode-status{ color:var(--good); }
+.rnode.locked{ opacity:.6; }
+
+.btn-research{ background:var(--panel-3); border-color:var(--line); justify-content:center; }
+
+.rnode-costs{ display:flex; flex-direction:column; gap:5px; margin-bottom:10px; }
+.rcost-line{ display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:11.5px; }
+.rcost-chip{ width:8px; height:8px; border-radius:2px; flex:none; }
+.rcost-amt{ color:var(--text-dim); }
+.rcost-have{ color:var(--text-faint); margin-left:auto; }
+
+.research-accordion{ display:flex; flex-direction:column; gap:12px; }
+.research-section{
+  border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  background: linear-gradient(165deg, var(--panel), var(--panel-2)); box-shadow: var(--shadow);
+  border-left:3px solid var(--branch-color, var(--accent));
+}
+.research-section-header{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:15px 18px; background:transparent; border:none; cursor:pointer; text-align:left;
+  font-family:'Orbitron',sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--branch-color, var(--accent));
+}
+.research-section-header:hover{ background: rgba(255,255,255,.03); }
+.research-section-header .rs-meta{ display:flex; align-items:center; gap:10px; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0; text-transform:none; color:var(--text-faint); }
+.research-section-header .chevron{ display:inline-block; transition: transform .2s ease; color:var(--text-faint); }
+.research-section.expanded .chevron{ transform:rotate(180deg); }
+.research-section-body{
+  display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap:14px;
+  padding:4px 18px 18px;
+}
+.research-section-body[hidden]{ display:none; }
+
+/* ---------- modal ---------- */
+.modal-overlay{
+  position:fixed; inset:0; z-index:20; background: rgba(4,5,14,.72); backdrop-filter: blur(3px);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay[hidden]{ display:none; }
+.modal{
+  width:100%; max-width:400px; background: linear-gradient(165deg, var(--panel), var(--panel-2));
+  border:1px solid var(--line); border-radius:16px; padding:22px; box-shadow: var(--shadow);
+}
+.modal h2{ font-family:'Orbitron',sans-serif; font-size:16px; margin:0 0 12px; letter-spacing:.04em; color:var(--accent); }
+.modal p{ font-size:14.5px; color:var(--text-dim); line-height:1.5; margin:0 0 8px; }
+.modal .modal-figure{ font-family:'JetBrains Mono',monospace; color:var(--ore); font-weight:600; }
+.modal-actions{ display:flex; gap:10px; margin-top:18px; justify-content:flex-end; }
+.modal .btn{ width:auto; padding:9px 16px; }
+.modal .btn-primary{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.modal .btn-danger{ background: rgba(248,113,113,.14); border-color:var(--danger); color:var(--danger); }
+
+.footnote{ text-align:center; color:var(--text-faint); font-size:11.5px; margin-top:26px; letter-spacing:.03em; }
+
+@media (prefers-reduced-motion: reduce){
+  .starfield{ animation:none; }
+  .timer-fill{ transition:none; }
+  .pulse{ animation:none; }
+  .btn:hover:not(:disabled){ transform:none; }
+}
+
+@media (max-width:460px){
+  .console-bar{ padding:14px; }
+  .readouts{ gap:14px; }
+}
+</style>
+</head>
+<body>
+<div class="starfield" aria-hidden="true"></div>
+<div class="stage">
+  <header class="console-bar">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">⛏</span>
+      <h1>ASTROMINER</h1>
+    </div>
+    <div class="readouts">
+      <div class="readout credits">
+        <span class="label">Crediti</span>
+        <span class="value" id="credits-value">0</span>
+      </div>
+      <div class="readout rate">
+        <span class="label">Entrate</span>
+        <span class="value" id="rate-value">0 cr/s</span>
+      </div>
+    </div>
+    <button class="icon-btn" id="reset-btn" title="Reimposta partita" aria-label="Reimposta partita">⟲</button>
+  </header>
+
+  <nav class="tab-bar" role="tablist" aria-label="Sezioni">
+    <button class="tab-btn active" id="tab-btn-mining" data-tab="mining" role="tab" aria-selected="true">⛏ Miniera</button>
+    <button class="tab-btn" id="tab-btn-research" data-tab="research" role="tab" aria-selected="false">🧪 Laboratorio</button>
+  </nav>
+
+  <main class="tab-panel" id="panel-mining">
+    <div class="modules-grid" id="modules-grid" aria-label="Moduli di estrazione"></div>
+  </main>
+
+  <section class="tab-panel" id="panel-research" hidden>
+    <div class="research-intro">
+      <p>Clicca su una categoria per aprirla. Le abilità si comprano con i minerali estratti (non con i crediti): accumula scorta invece di venderla tutta. In ogni ramo si sblocca un'abilità alla volta, in ordine — ma puoi lavorare sui tre rami quando vuoi.</p>
+      <span class="research-progress" id="research-progress">0/10 abilità</span>
+    </div>
+    <div id="research-tree"></div>
+  </section>
+
+  <p class="footnote">Progressi salvati automaticamente in questo browser · continuano anche mentre non giochi</p>
+</div>
+
+<div class="modal-overlay" id="welcome-overlay" hidden>
+  <div class="modal">
+    <h2>Rapporto della stazione</h2>
+    <p id="welcome-text">Bentornato.</p>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="welcome-close">Riprendi l'estrazione</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reset-overlay" hidden>
+  <div class="modal">
+    <h2>Reimpostare la partita?</h2>
+    <p>Tutti i moduli, i crediti e i potenziamenti verranno azzerati. L'azione non è reversibile.</p>
+    <div class="modal-actions">
+      <button class="btn" id="reset-cancel">Annulla</button>
+      <button class="btn btn-danger" id="reset-confirm">Reimposta tutto</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+
+  var SAVE_KEY = "astrominer-save-v1";
+  var OFFLINE_CAP_S = 8*3600;      // massimo 8 ore di progressi offline calcolati
+  var WELCOME_THRESHOLD_S = 20;    // mostra il rapporto solo se assente per piu' di 20s
+
+  var PREFIXES = ["Ferro","Rame","Argento","Oro","Platino","Titanio","Uranio","Osmio","Iridio","Palladio","Cobalto","Renio","Afnio","Zirconio","Vanadio","Tungsteno","Cromo","Niobio"];
+  var SUFFIXES = ["Spaziale","Cosmico","Stellare","Nebulare","Galattico","Asteroidale","Quantico","Astrale","Siderale","Interdimensionale","Vuoto","Pulsar","Solare","Cristallino"];
+
+  function romanize(n){
+    var vals=[10,9,5,4,1], syms=["X","IX","V","IV","I"], r="";
+    while(n>0){ for(var i=0;i<vals.length;i++){ while(n>=vals[i]){ r+=syms[i]; n-=vals[i]; } } }
+    return r;
+  }
+
+  function mineralName(i){
+    var combos = PREFIXES.length*SUFFIXES.length;
+    var cycle = Math.floor(i/combos);
+    var idx = i%combos;
+    var p = PREFIXES[(idx*7+idx) % PREFIXES.length];
+    var s = SUFFIXES[(idx*11+3) % SUFFIXES.length];
+    return cycle===0 ? (p+" "+s) : (p+" "+s+" "+romanize(cycle+1));
+  }
+
+  function mineralConfig(i){
+    var baseTime = 3*Math.pow(1.13,i);
+    var baseValue = 4*Math.pow(1.55,i);
+    var unlockCost = i===0 ? 0 : Math.round(220*Math.pow(4.8,i-1));
+    var speedBaseCost = Math.max(20, Math.round(baseValue*6.5));
+    var yieldBaseCost = Math.max(55, Math.round(baseValue*19));
+    var autoCost = Math.round(baseValue*95)+150;
+    return {
+      i: i, name: mineralName(i), hue: (i*47)%360,
+      baseTime: baseTime, baseValue: baseValue, unlockCost: unlockCost,
+      speedBaseCost: speedBaseCost, yieldBaseCost: yieldBaseCost, autoCost: autoCost
+    };
+  }
+
+  // Ogni ramo ha 10 abilità in catena lineare: le prime 3 costano il minerale #1,
+  // le successive 3 il minerale #2, le successive 3 il minerale #3; la decima (capstone)
+  // richiede il minerale #10 insieme a una combinazione di minerali già raccolti.
+  var RESEARCH_TREE = [
+    // ---------------- ESTRAZIONE (velocità e resa) ----------------
+    { id:"e01", name:"Punte Rinforzate", branch:"estrazione", depends:null,
+      cost:[{mineralIndex:0, amount:25}], effects:[{type:"speed", value:0.03}], desc:"-3% tempo di estrazione." },
+    { id:"e02", name:"Motore a Vibrazione", branch:"estrazione", depends:"e01",
+      cost:[{mineralIndex:0, amount:35}], effects:[{type:"speed", value:0.03}], desc:"-3% tempo di estrazione." },
+    { id:"e03", name:"Compressore a Freddo", branch:"estrazione", depends:"e02",
+      cost:[{mineralIndex:0, amount:45}], effects:[{type:"yield", value:1}], desc:"+1 resa base." },
+    { id:"e04", name:"Perforazione Rapida", branch:"estrazione", depends:"e03",
+      cost:[{mineralIndex:1, amount:25},{mineralIndex:0, amount:15}], effects:[{type:"speed", value:0.04}], desc:"-4% tempo di estrazione." },
+    { id:"e05", name:"Trapani Automatici", branch:"estrazione", depends:"e04",
+      cost:[{mineralIndex:1, amount:32},{mineralIndex:0, amount:18}], effects:[{type:"speed", value:0.04}], desc:"-4% tempo di estrazione." },
+    { id:"e06", name:"Estrattore a Risonanza", branch:"estrazione", depends:"e05",
+      cost:[{mineralIndex:1, amount:40},{mineralIndex:0, amount:22}], effects:[{type:"yield", value:1}], desc:"+1 resa base." },
+    { id:"e07", name:"Sciame di Droni", branch:"estrazione", depends:"e06",
+      cost:[{mineralIndex:2, amount:22},{mineralIndex:1, amount:14}], effects:[{type:"speed", value:0.04}], desc:"-4% tempo di estrazione." },
+    { id:"e08", name:"Perforatore al Plasma", branch:"estrazione", depends:"e07",
+      cost:[{mineralIndex:2, amount:28},{mineralIndex:1, amount:18}], effects:[{type:"speed", value:0.05}], desc:"-5% tempo di estrazione." },
+    { id:"e09", name:"Nucleo di Estrazione", branch:"estrazione", depends:"e08",
+      cost:[{mineralIndex:2, amount:35},{mineralIndex:1, amount:22},{mineralIndex:0, amount:20}], effects:[{type:"yield", value:1}], desc:"+1 resa base." },
+    { id:"e10", name:"Singolarità Mineraria", branch:"estrazione", depends:"e09",
+      cost:[{mineralIndex:9, amount:30},{mineralIndex:2, amount:40},{mineralIndex:0, amount:60}], effects:[{type:"speed", value:0.06},{type:"yield", value:1}], desc:"-6% tempo di estrazione e +1 resa base." },
+
+    // ---------------- RAFFINAZIONE (valore di vendita) ----------------
+    { id:"r01", name:"Fusione Base", branch:"raffinazione", depends:null,
+      cost:[{mineralIndex:0, amount:25}], effects:[{type:"value", value:0.02}], desc:"+2% valore di vendita." },
+    { id:"r02", name:"Filtro Magnetico", branch:"raffinazione", depends:"r01",
+      cost:[{mineralIndex:0, amount:35}], effects:[{type:"value", value:0.02}], desc:"+2% valore di vendita." },
+    { id:"r03", name:"Cristallizzazione", branch:"raffinazione", depends:"r02",
+      cost:[{mineralIndex:0, amount:45}], effects:[{type:"value", value:0.03}], desc:"+3% valore di vendita." },
+    { id:"r04", name:"Catalizzatori", branch:"raffinazione", depends:"r03",
+      cost:[{mineralIndex:1, amount:25},{mineralIndex:0, amount:15}], effects:[{type:"value", value:0.03}], desc:"+3% valore di vendita." },
+    { id:"r05", name:"Camera a Vuoto", branch:"raffinazione", depends:"r04",
+      cost:[{mineralIndex:1, amount:32},{mineralIndex:0, amount:18}], effects:[{type:"value", value:0.04}], desc:"+4% valore di vendita." },
+    { id:"r06", name:"Nano-raffineria", branch:"raffinazione", depends:"r05",
+      cost:[{mineralIndex:1, amount:40},{mineralIndex:0, amount:22}], effects:[{type:"value", value:0.04}], desc:"+4% valore di vendita." },
+    { id:"r07", name:"Sintesi Molecolare", branch:"raffinazione", depends:"r06",
+      cost:[{mineralIndex:2, amount:22},{mineralIndex:1, amount:14}], effects:[{type:"value", value:0.05}], desc:"+5% valore di vendita." },
+    { id:"r08", name:"Reattore a Fusione", branch:"raffinazione", depends:"r07",
+      cost:[{mineralIndex:2, amount:28},{mineralIndex:1, amount:18}], effects:[{type:"value", value:0.05}], desc:"+5% valore di vendita." },
+    { id:"r09", name:"Distillazione Quantica", branch:"raffinazione", depends:"r08",
+      cost:[{mineralIndex:2, amount:35},{mineralIndex:1, amount:22},{mineralIndex:0, amount:20}], effects:[{type:"value", value:0.06}], desc:"+6% valore di vendita." },
+    { id:"r10", name:"Alchimia Stellare", branch:"raffinazione", depends:"r09",
+      cost:[{mineralIndex:9, amount:30},{mineralIndex:2, amount:40},{mineralIndex:0, amount:60}], effects:[{type:"value", value:0.08}], desc:"+8% valore di vendita." },
+
+    // ---------------- LOGISTICA (sconti su sblocco e potenziamenti) ----------------
+    { id:"l01", name:"Rotte Ottimizzate", branch:"logistica", depends:null,
+      cost:[{mineralIndex:0, amount:25}], effects:[{type:"unlockDiscount", value:0.03}], desc:"-3% sul costo di sblocco dei nuovi minerali." },
+    { id:"l02", name:"Mappe Stellari", branch:"logistica", depends:"l01",
+      cost:[{mineralIndex:0, amount:35}], effects:[{type:"unlockDiscount", value:0.03}], desc:"-3% sul costo di sblocco dei nuovi minerali." },
+    { id:"l03", name:"Manutenzione Predittiva", branch:"logistica", depends:"l02",
+      cost:[{mineralIndex:0, amount:45}], effects:[{type:"upgradeDiscount", value:0.04}], desc:"-4% sul costo dei potenziamenti Velocità e Resa." },
+    { id:"l04", name:"Convogli Automatici", branch:"logistica", depends:"l03",
+      cost:[{mineralIndex:1, amount:25},{mineralIndex:0, amount:15}], effects:[{type:"unlockDiscount", value:0.04}], desc:"-4% sul costo di sblocco dei nuovi minerali." },
+    { id:"l05", name:"Magazzini Orbitali", branch:"logistica", depends:"l04",
+      cost:[{mineralIndex:1, amount:32},{mineralIndex:0, amount:18}], effects:[{type:"unlockDiscount", value:0.04}], desc:"-4% sul costo di sblocco dei nuovi minerali." },
+    { id:"l06", name:"Officina Modulare", branch:"logistica", depends:"l05",
+      cost:[{mineralIndex:1, amount:40},{mineralIndex:0, amount:22}], effects:[{type:"upgradeDiscount", value:0.05}], desc:"-5% sul costo dei potenziamenti Velocità e Resa." },
+    { id:"l07", name:"Rete Commerciale", branch:"logistica", depends:"l06",
+      cost:[{mineralIndex:2, amount:22},{mineralIndex:1, amount:14}], effects:[{type:"unlockDiscount", value:0.05}], desc:"-5% sul costo di sblocco dei nuovi minerali." },
+    { id:"l08", name:"Accordi Diplomatici", branch:"logistica", depends:"l07",
+      cost:[{mineralIndex:2, amount:28},{mineralIndex:1, amount:18}], effects:[{type:"unlockDiscount", value:0.05}], desc:"-5% sul costo di sblocco dei nuovi minerali." },
+    { id:"l09", name:"Ingegneria Snella", branch:"logistica", depends:"l08",
+      cost:[{mineralIndex:2, amount:35},{mineralIndex:1, amount:22},{mineralIndex:0, amount:20}], effects:[{type:"upgradeDiscount", value:0.06}], desc:"-6% sul costo dei potenziamenti Velocità e Resa." },
+    { id:"l10", name:"Impero Logistico", branch:"logistica", depends:"l09",
+      cost:[{mineralIndex:9, amount:30},{mineralIndex:2, amount:40},{mineralIndex:0, amount:60}], effects:[{type:"unlockDiscount", value:0.08},{type:"upgradeDiscount", value:0.06}], desc:"-8% sul costo di sblocco dei nuovi minerali e -6% sul costo dei potenziamenti." }
+  ];
+  var RESEARCH_TOTAL = RESEARCH_TREE.length;
+  var BRANCH_META = {
+    estrazione: { label:"Estrazione", color:"var(--accent)" },
+    raffinazione: { label:"Raffinazione", color:"var(--ore)" },
+    logistica: { label:"Logistica", color:"var(--violet)" }
+  };
+
+  function computeMods(){
+    var mods = { speedMult:1, valueMult:1, yieldBonus:0, unlockMult:1, upgradeMult:1 };
+    RESEARCH_TREE.forEach(function(n){
+      if(!state.research[n.id]) return;
+      n.effects.forEach(function(e){
+        if(e.type==="speed") mods.speedMult *= (1-e.value);
+        else if(e.type==="value") mods.valueMult += e.value;
+        else if(e.type==="yield") mods.yieldBonus += e.value;
+        else if(e.type==="unlockDiscount") mods.unlockMult *= (1-e.value);
+        else if(e.type==="upgradeDiscount") mods.upgradeMult *= (1-e.value);
+      });
+    });
+    return mods;
+  }
+
+  function effTime(cfg, m, mods){ return Math.max(0.35, cfg.baseTime*Math.pow(0.9, m.speedLevel)*mods.speedMult); }
+  function effYield(cfg, m, mods){ return 1+m.yieldLevel+mods.yieldBonus; }
+  function sellValue(cfg, mods){ return cfg.baseValue*mods.valueMult; }
+  function upgradeCost(base, level, mult){ return Math.round(base*Math.pow(1.28, level)*mult); }
+
+  function fmt(n){
+    if(n<0) n=0;
+    if(n<1000) return (Math.floor(n*10)/10).toString().replace(/\.0$/,"");
+    var units=["K","M","B","T","Qa","Qi","Sx","Sp","Oc"];
+    var u=-1;
+    while(n>=1000 && u<units.length-1){ n/=1000; u++; }
+    return n.toFixed(n<10?2:n<100?1:0)+units[u];
+  }
+  function fmtInt(n){ return Math.floor(n).toLocaleString("it-IT"); }
+
+  function defaultState(){
+    return {
+      credits: 0,
+      totalEarned: 0,
+      lastSave: Date.now(),
+      minerals: [ { stock:0, timeLeft: mineralConfig(0).baseTime, speedLevel:0, yieldLevel:0, autoSell:false, autoUnlocked:false } ],
+      research: {}
+    };
+  }
+
+  var state = null;
+  var lastTick = Date.now();
+
+  function loadGame(hotData){
+    if(hotData && typeof hotData.credits === "number" && Array.isArray(hotData.minerals) && hotData.minerals.length){
+      state = hotData;
+      return;
+    }
+    try{
+      var raw = localStorage.getItem(SAVE_KEY);
+      if(raw){ state = JSON.parse(raw); }
+    }catch(e){ /* ignore corrupted save */ }
+    if(!state || !Array.isArray(state.minerals) || !state.minerals.length){
+      state = defaultState();
+    }
+    if(!state.research || typeof state.research !== "object"){ state.research = {}; }
+    state.minerals.forEach(function(m){
+      if(typeof m.autoUnlocked !== "boolean"){ m.autoUnlocked = !!m.autoSell; }
+    });
+  }
+
+  function saveGame(){
+    state.lastSave = Date.now();
+    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){ /* storage unavailable */ }
+  }
+
+  // avanza un modulo di dt secondi; ritorna {stockGained, creditsGained}
+  function advance(m, cfg, dt, mods){
+    if(dt<=0) return {stock:0, credits:0};
+    var t = effTime(cfg, m, mods);
+    var passed = t - m.timeLeft;
+    var total = passed + dt;
+    var cycles = Math.floor(total/t);
+    m.timeLeft = t - (total - cycles*t);
+    if(cycles<=0) return {stock:0, credits:0};
+    var gained = cycles*effYield(cfg, m, mods);
+    if(m.autoSell){
+      var cr = gained*sellValue(cfg, mods);
+      state.credits += cr; state.totalEarned += cr;
+      return {stock:0, credits:cr};
+    }
+    m.stock += gained;
+    return {stock:gained, credits:0};
+  }
+
+  function applyOfflineProgress(){
+    var elapsed = (Date.now()-state.lastSave)/1000;
+    if(elapsed < WELCOME_THRESHOLD_S) return null;
+    elapsed = Math.min(elapsed, OFFLINE_CAP_S);
+    var creditsBefore = state.credits;
+    var minedTotals = {};
+    var mods = computeMods();
+    state.minerals.forEach(function(m,i){
+      var cfg = mineralConfig(i);
+      var res = advance(m, cfg, elapsed, mods);
+      if(res.stock>0) minedTotals[cfg.name] = (minedTotals[cfg.name]||0) + res.stock;
+    });
+    var creditsGained = state.credits - creditsBefore;
+    return { elapsed: elapsed, creditsGained: creditsGained, minedTotals: minedTotals };
+  }
+
+  // ---------------- rendering ----------------
+  var grid = document.getElementById("modules-grid");
+  var creditsEl = document.getElementById("credits-value");
+  var rateEl = document.getElementById("rate-value");
+
+  function buildModules(){
+    var html = "";
+    state.minerals.forEach(function(m,i){
+      var cfg = mineralConfig(i);
+      html += moduleHTML(m, cfg, i);
+    });
+    var nextI = state.minerals.length;
+    var nextCfg = mineralConfig(nextI);
+    html += lockedModuleHTML(nextCfg, nextI);
+    grid.innerHTML = html;
+    updateDOM(true);
+  }
+
+  function moduleHTML(m, cfg, i){
+    return (
+      '<article class="module" style="--hue:'+cfg.hue+'" data-i="'+i+'">'+
+        '<div class="module-head">'+
+          '<span class="ore-chip"></span>'+
+          '<h2 class="module-name">'+cfg.name+'</h2>'+
+          '<span class="module-tier">Modulo '+String(i+1).padStart(2,"0")+'</span>'+
+        '</div>'+
+        '<div class="module-body">'+
+          '<div class="stock-row" id="stock-row-'+i+'"'+(m.autoSell?' hidden':'')+'>'+
+            '<span class="stock-label">Scorta</span>'+
+            '<span class="stock-value" id="stock-'+i+'">0</span>'+
+            '<button class="btn btn-sell" data-action="sell" data-i="'+i+'">Vendi <span class="btn-sub" id="sell-value-'+i+'"></span></button>'+
+          '</div>'+
+          '<div class="timer-row">'+
+            '<div class="timer-track"><div class="timer-fill" id="timer-fill-'+i+'"></div></div>'+
+            '<span class="timer-label" id="timer-label-'+i+'"></span>'+
+          '</div>'+
+        '</div>'+
+        '<div class="module-upgrades">'+
+          '<button class="btn btn-upgrade" data-action="speed" data-i="'+i+'">'+
+            '<span class="btn-title">⚡ Velocità Lv.'+m.speedLevel+'</span>'+
+            '<span class="btn-cost" id="speed-cost-'+i+'"></span>'+
+          '</button>'+
+          '<button class="btn btn-upgrade" data-action="yield" data-i="'+i+'">'+
+            '<span class="btn-title">⛏ Resa Lv.'+m.yieldLevel+'</span>'+
+            '<span class="btn-cost" id="yield-cost-'+i+'"></span>'+
+          '</button>'+
+          '<button class="btn btn-upgrade auto'+(m.autoSell?' is-on':'')+'" data-action="auto" data-i="'+i+'">'+
+            '<span class="btn-title">🛰 Auto-vendita '+(m.autoSell?'ON':'OFF')+'</span>'+
+            '<span class="btn-cost" id="auto-cost-'+i+'">'+(m.autoUnlocked?(m.autoSell?'clicca per fermare':'clicca per attivare'):'')+'</span>'+
+          '</button>'+
+        '</div>'+
+      '</article>'
+    );
+  }
+
+  function lockedModuleHTML(cfg, i){
+    return (
+      '<article class="module locked" data-i="'+i+'">'+
+        '<div class="scan-overlay" aria-hidden="true"></div>'+
+        '<div class="module-head">'+
+          '<span class="ore-chip locked-chip"></span>'+
+          '<h2 class="module-name">??? ???</h2>'+
+          '<span class="module-tier locked-tier">Modulo '+String(i+1).padStart(2,"0")+'</span>'+
+        '</div>'+
+        '<div class="lock-body">'+
+          '<p class="lock-hint">Minerale non ancora rilevato dai sensori</p>'+
+          '<button class="btn btn-unlock" data-action="unlock" data-i="'+i+'">'+
+            '<span class="btn-title">🔒 Sblocca modulo</span>'+
+            '<span class="btn-cost" id="unlock-cost-'+i+'"></span>'+
+          '</button>'+
+        '</div>'+
+      '</article>'
+    );
+  }
+
+  function updateDOM(force){
+    var mods = computeMods();
+    creditsEl.textContent = fmt(state.credits)+" cr";
+
+    var rate = 0;
+    state.minerals.forEach(function(m,i){
+      var cfg = mineralConfig(i);
+      if(m.autoSell) rate += (effYield(cfg,m,mods)/effTime(cfg,m,mods))*sellValue(cfg,mods);
+
+      var t = effTime(cfg, m, mods);
+      var pct = Math.max(0, Math.min(100, (1-(m.timeLeft/t))*100));
+      var fillEl = document.getElementById("timer-fill-"+i);
+      if(fillEl) fillEl.style.width = pct.toFixed(1)+"%";
+      var labelEl = document.getElementById("timer-label-"+i);
+      if(labelEl) labelEl.textContent = "+"+effYield(cfg,m,mods)+" tra "+m.timeLeft.toFixed(1)+"s";
+
+      var stockEl = document.getElementById("stock-"+i);
+      if(stockEl) stockEl.textContent = fmtInt(m.stock);
+      var sellVal = document.getElementById("sell-value-"+i);
+      if(sellVal) sellVal.textContent = "("+fmt(m.stock*sellValue(cfg,mods))+" cr)";
+      var sellBtn = grid.querySelector('.btn-sell[data-i="'+i+'"]');
+      if(sellBtn) sellBtn.disabled = m.stock<=0;
+
+      var speedCost = upgradeCost(cfg.speedBaseCost, m.speedLevel, mods.upgradeMult);
+      var speedEl = document.getElementById("speed-cost-"+i);
+      if(speedEl) speedEl.textContent = fmt(speedCost)+" cr";
+      var speedBtn = grid.querySelector('.btn-upgrade[data-action="speed"][data-i="'+i+'"]');
+      if(speedBtn) speedBtn.disabled = state.credits < speedCost;
+
+      var yieldCost = upgradeCost(cfg.yieldBaseCost, m.yieldLevel, mods.upgradeMult);
+      var yieldEl = document.getElementById("yield-cost-"+i);
+      if(yieldEl) yieldEl.textContent = fmt(yieldCost)+" cr";
+      var yieldBtn = grid.querySelector('.btn-upgrade[data-action="yield"][data-i="'+i+'"]');
+      if(yieldBtn) yieldBtn.disabled = state.credits < yieldCost;
+
+      if(!m.autoUnlocked){
+        var autoEl = document.getElementById("auto-cost-"+i);
+        if(autoEl) autoEl.textContent = fmt(cfg.autoCost)+" cr";
+        var autoBtn = grid.querySelector('.btn-upgrade[data-action="auto"][data-i="'+i+'"]');
+        if(autoBtn) autoBtn.disabled = state.credits < cfg.autoCost;
+      }
+    });
+    rateEl.textContent = fmt(rate)+" cr/s";
+
+    var nextI = state.minerals.length;
+    var nextCfg = mineralConfig(nextI);
+    var nextUnlockCost = Math.round(nextCfg.unlockCost*mods.unlockMult);
+    var unlockCostEl = document.getElementById("unlock-cost-"+nextI);
+    if(unlockCostEl) unlockCostEl.textContent = fmt(nextUnlockCost)+" cr";
+    var unlockBtn = grid.querySelector('.btn-unlock[data-i="'+nextI+'"]');
+    if(unlockBtn) unlockBtn.disabled = state.credits < nextUnlockCost;
+
+    updateResearchAfford();
+  }
+
+  // ---------------- research lab ----------------
+  var researchTreeEl = document.getElementById("research-tree");
+  var researchProgressEl = document.getElementById("research-progress");
+
+  function researchNodeStatus(node){
+    var purchased = !!state.research[node.id];
+    var prereqOk = !node.depends || !!state.research[node.depends];
+    var mineralsUnlocked = node.cost.every(function(c){ return c.mineralIndex < state.minerals.length; });
+    return { purchased:purchased, prereqOk:prereqOk, mineralsUnlocked:mineralsUnlocked };
+  }
+
+  function researchAffordable(node){
+    return node.cost.every(function(c){ return state.minerals[c.mineralIndex].stock >= c.amount; });
+  }
+
+  function researchCostLineHTML(node, c){
+    var mcfg = mineralConfig(c.mineralIndex);
+    var stock = state.minerals[c.mineralIndex] ? state.minerals[c.mineralIndex].stock : 0;
+    return (
+      '<div class="rcost-line">'+
+        '<span class="rcost-chip" style="background:hsl('+mcfg.hue+' 70% 55%)"></span>'+
+        '<span class="rcost-amt">'+c.amount+'x '+mcfg.name+'</span>'+
+        '<span class="rcost-have" id="rhave-'+node.id+'-'+c.mineralIndex+'">(hai '+fmtInt(stock)+')</span>'+
+      '</div>'
+    );
+  }
+
+  function researchNodeHTML(node){
+    var st = researchNodeStatus(node);
+    var cardClass = "rnode"+(st.purchased?" purchased":(!st.prereqOk||!st.mineralsUnlocked?" locked":""));
+    var branchColor = BRANCH_META[node.branch].color;
+    var body;
+    if(st.purchased){
+      body = '<span class="rnode-status">✓ Acquisita</span>';
+    } else if(!st.prereqOk){
+      var parent = RESEARCH_TREE.filter(function(n){ return n.id===node.depends; })[0];
+      body = '<span class="rnode-status">🔒 Richiede: '+(parent?parent.name:"—")+'</span>';
+    } else if(!st.mineralsUnlocked){
+      var missing = node.cost.filter(function(c){ return c.mineralIndex>=state.minerals.length; })
+        .map(function(c){ return mineralConfig(c.mineralIndex).name; }).join(", ");
+      body = '<span class="rnode-status">🔒 Richiede: '+missing+' (non ancora sbloccato)</span>';
+    } else {
+      body =
+        '<div class="rnode-costs">'+node.cost.map(function(c){ return researchCostLineHTML(node,c); }).join('')+'</div>'+
+        '<button class="btn btn-research" data-node="'+node.id+'" '+(researchAffordable(node)?'':'disabled')+'>'+
+          '<span class="btn-title">Sblocca</span>'+
+        '</button>';
+    }
+    return (
+      '<div class="'+cardClass+'" data-node="'+node.id+'" style="--branch-color:'+branchColor+'">'+
+        '<div class="rnode-head"><span class="rnode-dot"></span><h3>'+node.name+'</h3></div>'+
+        '<p class="rnode-desc">'+node.desc+'</p>'+
+        body+
+      '</div>'
+    );
+  }
+
+  var expandedBranch = null;
+
+  function renderResearch(){
+    var branches = { estrazione:[], raffinazione:[], logistica:[] };
+    RESEARCH_TREE.forEach(function(n){ branches[n.branch].push(n); });
+
+    var html = '<div class="research-accordion">';
+    Object.keys(branches).forEach(function(key){
+      var nodes = branches[key];
+      var purchasedInBranch = nodes.filter(function(n){ return state.research[n.id]; }).length;
+      var isOpen = expandedBranch===key;
+      html += '<div class="research-section'+(isOpen?' expanded':'')+'" style="--branch-color:'+BRANCH_META[key].color+'">';
+      html += '<button class="research-section-header" data-branch="'+key+'" aria-expanded="'+isOpen+'">';
+      html += '<span>'+BRANCH_META[key].label+'</span>';
+      html += '<span class="rs-meta">'+purchasedInBranch+'/10 <span class="chevron">▾</span></span>';
+      html += '</button>';
+      html += '<div class="research-section-body" id="rsbody-'+key+'"'+(isOpen?'':' hidden')+'>';
+      nodes.forEach(function(n){ html += researchNodeHTML(n); });
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    researchTreeEl.innerHTML = html;
+
+    var purchasedCount = RESEARCH_TREE.filter(function(n){ return state.research[n.id]; }).length;
+    researchProgressEl.textContent = purchasedCount+"/"+RESEARCH_TOTAL+" abilità";
+  }
+
+  function updateResearchAfford(){
+    RESEARCH_TREE.forEach(function(node){
+      if(state.research[node.id]) return;
+      var st = researchNodeStatus(node);
+      if(!st.prereqOk || !st.mineralsUnlocked) return;
+      node.cost.forEach(function(c){
+        var haveEl = document.getElementById("rhave-"+node.id+"-"+c.mineralIndex);
+        if(haveEl) haveEl.textContent = "(hai "+fmtInt(state.minerals[c.mineralIndex].stock)+")";
+      });
+      var buyBtn = researchTreeEl.querySelector('.btn-research[data-node="'+node.id+'"]');
+      if(buyBtn) buyBtn.disabled = !researchAffordable(node);
+    });
+  }
+
+  function buyResearch(nodeId){
+    var node = RESEARCH_TREE.filter(function(n){ return n.id===nodeId; })[0];
+    if(!node || state.research[nodeId]) return;
+    var st = researchNodeStatus(node);
+    if(!st.prereqOk || !st.mineralsUnlocked || !researchAffordable(node)) return;
+    node.cost.forEach(function(c){ state.minerals[c.mineralIndex].stock -= c.amount; });
+    state.research[nodeId] = true;
+    renderResearch();
+    buildModules();
+    saveGame();
+  }
+
+  researchTreeEl.addEventListener("click", function(ev){
+    var headerBtn = ev.target.closest("button.research-section-header");
+    if(headerBtn){
+      var key = headerBtn.getAttribute("data-branch");
+      expandedBranch = (expandedBranch===key) ? null : key;
+      renderResearch();
+      return;
+    }
+    var btn = ev.target.closest("button[data-node]");
+    if(!btn || btn.disabled) return;
+    buyResearch(btn.getAttribute("data-node"));
+  });
+
+  // ---------------- tabs ----------------
+  var tabBtnMining = document.getElementById("tab-btn-mining");
+  var tabBtnResearch = document.getElementById("tab-btn-research");
+  var panelMining = document.getElementById("panel-mining");
+  var panelResearch = document.getElementById("panel-research");
+  function selectTab(tab){
+    var isMining = tab==="mining";
+    panelMining.hidden = !isMining;
+    panelResearch.hidden = isMining;
+    tabBtnMining.classList.toggle("active", isMining);
+    tabBtnResearch.classList.toggle("active", !isMining);
+    tabBtnMining.setAttribute("aria-selected", isMining);
+    tabBtnResearch.setAttribute("aria-selected", !isMining);
+  }
+  tabBtnMining.addEventListener("click", function(){ selectTab("mining"); });
+  tabBtnResearch.addEventListener("click", function(){ selectTab("research"); });
+
+  function pulse(i){
+    var card = grid.querySelector('.module[data-i="'+i+'"]');
+    if(!card) return;
+    card.classList.remove("pulse");
+    void card.offsetWidth;
+    card.classList.add("pulse");
+  }
+
+  // ---------------- interactions ----------------
+  grid.addEventListener("click", function(ev){
+    var btn = ev.target.closest("button[data-action]");
+    if(!btn || btn.disabled) return;
+    var i = parseInt(btn.getAttribute("data-i"),10);
+    var action = btn.getAttribute("data-action");
+    var cfg = mineralConfig(i);
+    var mods = computeMods();
+
+    if(action==="sell"){
+      var m = state.minerals[i];
+      if(m.stock<=0) return;
+      var gain = m.stock*sellValue(cfg,mods);
+      state.credits += gain; state.totalEarned += gain; m.stock = 0;
+    } else if(action==="speed"){
+      var m2 = state.minerals[i];
+      var cost = upgradeCost(cfg.speedBaseCost, m2.speedLevel, mods.upgradeMult);
+      if(state.credits<cost) return;
+      state.credits -= cost; m2.speedLevel++;
+      document.querySelector('.module[data-i="'+i+'"] .btn-upgrade[data-action="speed"] .btn-title').textContent = "⚡ Velocità Lv."+m2.speedLevel;
+    } else if(action==="yield"){
+      var m3 = state.minerals[i];
+      var cost3 = upgradeCost(cfg.yieldBaseCost, m3.yieldLevel, mods.upgradeMult);
+      if(state.credits<cost3) return;
+      state.credits -= cost3; m3.yieldLevel++;
+      document.querySelector('.module[data-i="'+i+'"] .btn-upgrade[data-action="yield"] .btn-title').textContent = "⛏ Resa Lv."+m3.yieldLevel;
+    } else if(action==="auto"){
+      var m4 = state.minerals[i];
+      if(m4.autoUnlocked){
+        m4.autoSell = !m4.autoSell;
+      } else {
+        if(state.credits<cfg.autoCost) return;
+        state.credits -= cfg.autoCost; m4.autoUnlocked = true; m4.autoSell = true;
+      }
+      buildModules();
+      saveGame();
+      return;
+    } else if(action==="unlock"){
+      var unlockCostNow = Math.round(cfg.unlockCost*mods.unlockMult);
+      if(state.credits<unlockCostNow) return;
+      state.credits -= unlockCostNow;
+      state.minerals.push({ stock:0, timeLeft: cfg.baseTime, speedLevel:0, yieldLevel:0, autoSell:false, autoUnlocked:false });
+      buildModules();
+      renderResearch();
+      saveGame();
+      return;
+    } else {
+      return;
+    }
+    updateDOM();
+    saveGame();
+  });
+
+  // ---------------- reset ----------------
+  var resetOverlay = document.getElementById("reset-overlay");
+  document.getElementById("reset-btn").addEventListener("click", function(){ resetOverlay.hidden = false; });
+  document.getElementById("reset-cancel").addEventListener("click", function(){ resetOverlay.hidden = true; });
+  document.getElementById("reset-confirm").addEventListener("click", function(){
+    state = defaultState();
+    resetOverlay.hidden = true;
+    buildModules();
+    renderResearch();
+    saveGame();
+  });
+
+  // ---------------- welcome-back report ----------------
+  function showWelcome(report){
+    var overlay = document.getElementById("welcome-overlay");
+    var text = document.getElementById("welcome-text");
+    var hours = Math.floor(report.elapsed/3600);
+    var mins = Math.floor((report.elapsed%3600)/60);
+    var timeStr = hours>0 ? (hours+"h "+mins+"min") : (mins+" min");
+    var lines = "Sei stato via per circa "+timeStr+".<br>";
+    var mined = Object.keys(report.minedTotals);
+    if(mined.length){
+      lines += "Estratto: "+mined.map(function(name){ return fmtInt(report.minedTotals[name])+" "+name; }).join(", ")+".<br>";
+    }
+    if(report.creditsGained>0){
+      lines += "Crediti guadagnati dall'auto-vendita: <span class='modal-figure'>"+fmt(report.creditsGained)+" cr</span>.";
+    } else if(!mined.length){
+      lines = "Bentornato alla stazione mineraria.";
+    }
+    text.innerHTML = lines;
+    overlay.hidden = false;
+  }
+  document.getElementById("welcome-close").addEventListener("click", function(){
+    document.getElementById("welcome-overlay").hidden = true;
+  });
+
+  // ---------------- boot ----------------
+  function start(hotData){
+    loadGame(hotData);
+    var report = applyOfflineProgress();
+    lastTick = Date.now();
+    buildModules();
+    renderResearch();
+    if(report) showWelcome(report);
+
+    setInterval(function(){
+      var now = Date.now();
+      var dt = (now-lastTick)/1000;
+      lastTick = now;
+      var tickMods = computeMods();
+      state.minerals.forEach(function(m,i){ advance(m, mineralConfig(i), dt, tickMods); });
+      updateDOM();
+    }, 100);
+
+    setInterval(saveGame, 5000);
+    document.addEventListener("visibilitychange", function(){ if(document.hidden) saveGame(); });
+    window.addEventListener("beforeunload", saveGame);
+
+    if(window.claude && window.claude.hot && window.claude.hot.snapshot){
+      window.claude.hot.snapshot(function(){ return state; });
+    }
+  }
+
+  if(window.claude && window.claude.hot && window.claude.hot.ready){
+    window.claude.hot.ready(start);
+  } else {
+    start(window.claude && window.claude.hot ? window.claude.hot.data : undefined);
+  }
+})();
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("service-worker.js").catch(function(){});
+    });
+  }
+</script>
+</body>
+</html>
