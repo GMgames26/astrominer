@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Astrominer</title>
 <meta name="description" content="Gioco idle di estrazione mineraria spaziale con laboratorio di ricerca.">
 <meta name="theme-color" content="#05060f">
@@ -43,6 +43,7 @@
 
 *,*::before,*::after{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; }
+html{ touch-action:manipulation; }
 
 body{
   background: radial-gradient(ellipse 120% 80% at 50% -10%, #101a3c 0%, var(--void) 55%, var(--void-2) 100%);
@@ -51,6 +52,12 @@ body{
   min-height:100vh;
   position:relative;
   overflow-x:hidden;
+  touch-action:manipulation;
+}
+
+button, .btn, .icon-btn, .tab-btn, .research-section-header{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .starfield{
@@ -367,75 +374,88 @@ body{
     };
   }
 
-  // Ogni ramo ha 10 abilità in catena lineare: le prime 3 costano il minerale #1,
-  // le successive 3 il minerale #2, le successive 3 il minerale #3; la decima (capstone)
-  // richiede il minerale #10 insieme a una combinazione di minerali già raccolti.
+  // Ogni ramo ha 10 abilità in catena lineare. Ogni abilità richiede un minerale nuovo
+  // (mai sbloccato prima in nessuna abilità) più una scorta residua del minerale precedente:
+  // 1ª = minerale #1; 2ª = minerale #1 + #2; 3ª = minerale #2 + #3; 4ª = minerale #3 + #4; ecc.
+  // La 10ª di ogni ramo richiede così il minerale #10, appena sbloccato nella miniera.
+  var RESEARCH_COSTS = [
+    [{mineralIndex:0, amount:30}],
+    [{mineralIndex:0, amount:12},{mineralIndex:1, amount:28}],
+    [{mineralIndex:1, amount:17},{mineralIndex:2, amount:36}],
+    [{mineralIndex:2, amount:22},{mineralIndex:3, amount:44}],
+    [{mineralIndex:3, amount:26},{mineralIndex:4, amount:52}],
+    [{mineralIndex:4, amount:31},{mineralIndex:5, amount:60}],
+    [{mineralIndex:5, amount:36},{mineralIndex:6, amount:68}],
+    [{mineralIndex:6, amount:41},{mineralIndex:7, amount:76}],
+    [{mineralIndex:7, amount:46},{mineralIndex:8, amount:84}],
+    [{mineralIndex:8, amount:50},{mineralIndex:9, amount:92}]
+  ];
   var RESEARCH_TREE = [
     // ---------------- ESTRAZIONE (velocità e resa) ----------------
     { id:"e01", name:"Punte Rinforzate", branch:"estrazione", depends:null,
-      cost:[{mineralIndex:0, amount:25}], effects:[{type:"speed", value:0.03}], desc:"-3% tempo di estrazione." },
+      cost:RESEARCH_COSTS[0], effects:[{type:"speed", value:0.03}], desc:"-3% tempo di estrazione." },
     { id:"e02", name:"Motore a Vibrazione", branch:"estrazione", depends:"e01",
-      cost:[{mineralIndex:0, amount:35}], effects:[{type:"speed", value:0.03}], desc:"-3% tempo di estrazione." },
+      cost:RESEARCH_COSTS[1], effects:[{type:"speed", value:0.03}], desc:"-3% tempo di estrazione." },
     { id:"e03", name:"Compressore a Freddo", branch:"estrazione", depends:"e02",
-      cost:[{mineralIndex:0, amount:45}], effects:[{type:"yield", value:1}], desc:"+1 resa base." },
+      cost:RESEARCH_COSTS[2], effects:[{type:"yield", value:1}], desc:"+1 resa base." },
     { id:"e04", name:"Perforazione Rapida", branch:"estrazione", depends:"e03",
-      cost:[{mineralIndex:1, amount:25},{mineralIndex:0, amount:15}], effects:[{type:"speed", value:0.04}], desc:"-4% tempo di estrazione." },
+      cost:RESEARCH_COSTS[3], effects:[{type:"speed", value:0.04}], desc:"-4% tempo di estrazione." },
     { id:"e05", name:"Trapani Automatici", branch:"estrazione", depends:"e04",
-      cost:[{mineralIndex:1, amount:32},{mineralIndex:0, amount:18}], effects:[{type:"speed", value:0.04}], desc:"-4% tempo di estrazione." },
+      cost:RESEARCH_COSTS[4], effects:[{type:"speed", value:0.04}], desc:"-4% tempo di estrazione." },
     { id:"e06", name:"Estrattore a Risonanza", branch:"estrazione", depends:"e05",
-      cost:[{mineralIndex:1, amount:40},{mineralIndex:0, amount:22}], effects:[{type:"yield", value:1}], desc:"+1 resa base." },
+      cost:RESEARCH_COSTS[5], effects:[{type:"yield", value:1}], desc:"+1 resa base." },
     { id:"e07", name:"Sciame di Droni", branch:"estrazione", depends:"e06",
-      cost:[{mineralIndex:2, amount:22},{mineralIndex:1, amount:14}], effects:[{type:"speed", value:0.04}], desc:"-4% tempo di estrazione." },
+      cost:RESEARCH_COSTS[6], effects:[{type:"speed", value:0.04}], desc:"-4% tempo di estrazione." },
     { id:"e08", name:"Perforatore al Plasma", branch:"estrazione", depends:"e07",
-      cost:[{mineralIndex:2, amount:28},{mineralIndex:1, amount:18}], effects:[{type:"speed", value:0.05}], desc:"-5% tempo di estrazione." },
+      cost:RESEARCH_COSTS[7], effects:[{type:"speed", value:0.05}], desc:"-5% tempo di estrazione." },
     { id:"e09", name:"Nucleo di Estrazione", branch:"estrazione", depends:"e08",
-      cost:[{mineralIndex:2, amount:35},{mineralIndex:1, amount:22},{mineralIndex:0, amount:20}], effects:[{type:"yield", value:1}], desc:"+1 resa base." },
+      cost:RESEARCH_COSTS[8], effects:[{type:"yield", value:1}], desc:"+1 resa base." },
     { id:"e10", name:"Singolarità Mineraria", branch:"estrazione", depends:"e09",
-      cost:[{mineralIndex:9, amount:30},{mineralIndex:2, amount:40},{mineralIndex:0, amount:60}], effects:[{type:"speed", value:0.06},{type:"yield", value:1}], desc:"-6% tempo di estrazione e +1 resa base." },
+      cost:RESEARCH_COSTS[9], effects:[{type:"speed", value:0.06},{type:"yield", value:1}], desc:"-6% tempo di estrazione e +1 resa base." },
 
     // ---------------- RAFFINAZIONE (valore di vendita) ----------------
     { id:"r01", name:"Fusione Base", branch:"raffinazione", depends:null,
-      cost:[{mineralIndex:0, amount:25}], effects:[{type:"value", value:0.02}], desc:"+2% valore di vendita." },
+      cost:RESEARCH_COSTS[0], effects:[{type:"value", value:0.02}], desc:"+2% valore di vendita." },
     { id:"r02", name:"Filtro Magnetico", branch:"raffinazione", depends:"r01",
-      cost:[{mineralIndex:0, amount:35}], effects:[{type:"value", value:0.02}], desc:"+2% valore di vendita." },
+      cost:RESEARCH_COSTS[1], effects:[{type:"value", value:0.02}], desc:"+2% valore di vendita." },
     { id:"r03", name:"Cristallizzazione", branch:"raffinazione", depends:"r02",
-      cost:[{mineralIndex:0, amount:45}], effects:[{type:"value", value:0.03}], desc:"+3% valore di vendita." },
+      cost:RESEARCH_COSTS[2], effects:[{type:"value", value:0.03}], desc:"+3% valore di vendita." },
     { id:"r04", name:"Catalizzatori", branch:"raffinazione", depends:"r03",
-      cost:[{mineralIndex:1, amount:25},{mineralIndex:0, amount:15}], effects:[{type:"value", value:0.03}], desc:"+3% valore di vendita." },
+      cost:RESEARCH_COSTS[3], effects:[{type:"value", value:0.03}], desc:"+3% valore di vendita." },
     { id:"r05", name:"Camera a Vuoto", branch:"raffinazione", depends:"r04",
-      cost:[{mineralIndex:1, amount:32},{mineralIndex:0, amount:18}], effects:[{type:"value", value:0.04}], desc:"+4% valore di vendita." },
+      cost:RESEARCH_COSTS[4], effects:[{type:"value", value:0.04}], desc:"+4% valore di vendita." },
     { id:"r06", name:"Nano-raffineria", branch:"raffinazione", depends:"r05",
-      cost:[{mineralIndex:1, amount:40},{mineralIndex:0, amount:22}], effects:[{type:"value", value:0.04}], desc:"+4% valore di vendita." },
+      cost:RESEARCH_COSTS[5], effects:[{type:"value", value:0.04}], desc:"+4% valore di vendita." },
     { id:"r07", name:"Sintesi Molecolare", branch:"raffinazione", depends:"r06",
-      cost:[{mineralIndex:2, amount:22},{mineralIndex:1, amount:14}], effects:[{type:"value", value:0.05}], desc:"+5% valore di vendita." },
+      cost:RESEARCH_COSTS[6], effects:[{type:"value", value:0.05}], desc:"+5% valore di vendita." },
     { id:"r08", name:"Reattore a Fusione", branch:"raffinazione", depends:"r07",
-      cost:[{mineralIndex:2, amount:28},{mineralIndex:1, amount:18}], effects:[{type:"value", value:0.05}], desc:"+5% valore di vendita." },
+      cost:RESEARCH_COSTS[7], effects:[{type:"value", value:0.05}], desc:"+5% valore di vendita." },
     { id:"r09", name:"Distillazione Quantica", branch:"raffinazione", depends:"r08",
-      cost:[{mineralIndex:2, amount:35},{mineralIndex:1, amount:22},{mineralIndex:0, amount:20}], effects:[{type:"value", value:0.06}], desc:"+6% valore di vendita." },
+      cost:RESEARCH_COSTS[8], effects:[{type:"value", value:0.06}], desc:"+6% valore di vendita." },
     { id:"r10", name:"Alchimia Stellare", branch:"raffinazione", depends:"r09",
-      cost:[{mineralIndex:9, amount:30},{mineralIndex:2, amount:40},{mineralIndex:0, amount:60}], effects:[{type:"value", value:0.08}], desc:"+8% valore di vendita." },
+      cost:RESEARCH_COSTS[9], effects:[{type:"value", value:0.08}], desc:"+8% valore di vendita." },
 
     // ---------------- LOGISTICA (sconti su sblocco e potenziamenti) ----------------
     { id:"l01", name:"Rotte Ottimizzate", branch:"logistica", depends:null,
-      cost:[{mineralIndex:0, amount:25}], effects:[{type:"unlockDiscount", value:0.03}], desc:"-3% sul costo di sblocco dei nuovi minerali." },
+      cost:RESEARCH_COSTS[0], effects:[{type:"unlockDiscount", value:0.03}], desc:"-3% sul costo di sblocco dei nuovi minerali." },
     { id:"l02", name:"Mappe Stellari", branch:"logistica", depends:"l01",
-      cost:[{mineralIndex:0, amount:35}], effects:[{type:"unlockDiscount", value:0.03}], desc:"-3% sul costo di sblocco dei nuovi minerali." },
+      cost:RESEARCH_COSTS[1], effects:[{type:"unlockDiscount", value:0.03}], desc:"-3% sul costo di sblocco dei nuovi minerali." },
     { id:"l03", name:"Manutenzione Predittiva", branch:"logistica", depends:"l02",
-      cost:[{mineralIndex:0, amount:45}], effects:[{type:"upgradeDiscount", value:0.04}], desc:"-4% sul costo dei potenziamenti Velocità e Resa." },
+      cost:RESEARCH_COSTS[2], effects:[{type:"upgradeDiscount", value:0.04}], desc:"-4% sul costo dei potenziamenti Velocità e Resa." },
     { id:"l04", name:"Convogli Automatici", branch:"logistica", depends:"l03",
-      cost:[{mineralIndex:1, amount:25},{mineralIndex:0, amount:15}], effects:[{type:"unlockDiscount", value:0.04}], desc:"-4% sul costo di sblocco dei nuovi minerali." },
+      cost:RESEARCH_COSTS[3], effects:[{type:"unlockDiscount", value:0.04}], desc:"-4% sul costo di sblocco dei nuovi minerali." },
     { id:"l05", name:"Magazzini Orbitali", branch:"logistica", depends:"l04",
-      cost:[{mineralIndex:1, amount:32},{mineralIndex:0, amount:18}], effects:[{type:"unlockDiscount", value:0.04}], desc:"-4% sul costo di sblocco dei nuovi minerali." },
+      cost:RESEARCH_COSTS[4], effects:[{type:"unlockDiscount", value:0.04}], desc:"-4% sul costo di sblocco dei nuovi minerali." },
     { id:"l06", name:"Officina Modulare", branch:"logistica", depends:"l05",
-      cost:[{mineralIndex:1, amount:40},{mineralIndex:0, amount:22}], effects:[{type:"upgradeDiscount", value:0.05}], desc:"-5% sul costo dei potenziamenti Velocità e Resa." },
+      cost:RESEARCH_COSTS[5], effects:[{type:"upgradeDiscount", value:0.05}], desc:"-5% sul costo dei potenziamenti Velocità e Resa." },
     { id:"l07", name:"Rete Commerciale", branch:"logistica", depends:"l06",
-      cost:[{mineralIndex:2, amount:22},{mineralIndex:1, amount:14}], effects:[{type:"unlockDiscount", value:0.05}], desc:"-5% sul costo di sblocco dei nuovi minerali." },
+      cost:RESEARCH_COSTS[6], effects:[{type:"unlockDiscount", value:0.05}], desc:"-5% sul costo di sblocco dei nuovi minerali." },
     { id:"l08", name:"Accordi Diplomatici", branch:"logistica", depends:"l07",
-      cost:[{mineralIndex:2, amount:28},{mineralIndex:1, amount:18}], effects:[{type:"unlockDiscount", value:0.05}], desc:"-5% sul costo di sblocco dei nuovi minerali." },
+      cost:RESEARCH_COSTS[7], effects:[{type:"unlockDiscount", value:0.05}], desc:"-5% sul costo di sblocco dei nuovi minerali." },
     { id:"l09", name:"Ingegneria Snella", branch:"logistica", depends:"l08",
-      cost:[{mineralIndex:2, amount:35},{mineralIndex:1, amount:22},{mineralIndex:0, amount:20}], effects:[{type:"upgradeDiscount", value:0.06}], desc:"-6% sul costo dei potenziamenti Velocità e Resa." },
+      cost:RESEARCH_COSTS[8], effects:[{type:"upgradeDiscount", value:0.06}], desc:"-6% sul costo dei potenziamenti Velocità e Resa." },
     { id:"l10", name:"Impero Logistico", branch:"logistica", depends:"l09",
-      cost:[{mineralIndex:9, amount:30},{mineralIndex:2, amount:40},{mineralIndex:0, amount:60}], effects:[{type:"unlockDiscount", value:0.08},{type:"upgradeDiscount", value:0.06}], desc:"-8% sul costo di sblocco dei nuovi minerali e -6% sul costo dei potenziamenti." }
+      cost:RESEARCH_COSTS[9], effects:[{type:"unlockDiscount", value:0.08},{type:"upgradeDiscount", value:0.06}], desc:"-8% sul costo di sblocco dei nuovi minerali e -6% sul costo dei potenziamenti." }
   ];
   var RESEARCH_TOTAL = RESEARCH_TREE.length;
   var BRANCH_META = {
