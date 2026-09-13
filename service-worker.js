@@ -1,5 +1,5 @@
 // Astrominer - service worker minimo: rende l'app installabile e giocabile offline.
-var CACHE_NAME = "astrominer-cache-v1";
+var CACHE_NAME = "astrominer-cache-v2";
 var ASSETS = [
   "./",
   "./index.html",
