@@ -38,8 +38,12 @@
   --violet-soft:rgba(167,139,250,.16);
   --premium:#f472b6;
   --premium-soft:rgba(244,114,182,.16);
+  --newcur:#5eead4;
+  --newcur-soft:rgba(94,234,212,.16);
   --shadow:0 18px 40px -18px rgba(0,0,0,.65);
   --radius:14px;
+  --tabbar-h:56px;
+  --curbar-h:46px;
   color-scheme: dark;
 }
 
@@ -82,7 +86,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .stage{
   position:relative; z-index:1; max-width:1100px; margin:0 auto;
   padding: 20px 20px 56px;
-  padding: calc(20px + env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  padding: calc(var(--tabbar-h) + 18px) max(20px, env(safe-area-inset-right)) calc(var(--curbar-h) + 22px) max(20px, env(safe-area-inset-left));
 }
 
 /* ---------- console bar ---------- */
@@ -100,15 +104,6 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   letter-spacing:.06em; margin:0; color:var(--text);
   text-shadow: 0 0 18px var(--accent-soft);
 }
-.readouts{ display:flex; gap:22px; flex-wrap:wrap; }
-.readout{ display:flex; flex-direction:column; align-items:flex-end; min-width:96px; }
-.readout .label{ font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--text-faint); }
-.readout .value{
-  font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums;
-  font-size:20px; font-weight:600; color:var(--ore);
-  text-shadow:0 0 14px var(--ore-soft);
-}
-.readout.rate .value{ color:var(--accent); text-shadow:0 0 14px var(--accent-soft); font-size:16px; }
 .icon-btn{
   width:38px; height:38px; border-radius:10px; border:1px solid var(--line);
   background: var(--panel-3); color:var(--text-dim); font-size:16px; cursor:pointer;
@@ -117,18 +112,49 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .icon-btn:hover{ color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
 .icon-btn:focus-visible, .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
-/* ---------- section tabs ---------- */
-.tab-bar{ display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+/* ---------- section tabs (fissa in alto) ---------- */
+.tab-bar{
+  position:fixed; top:0; left:0; right:0; z-index:40;
+  display:flex; gap:6px; flex-wrap:wrap;
+  max-width:1100px; margin:0 auto; width:100%;
+  padding: calc(9px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 9px max(14px, env(safe-area-inset-left));
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border-bottom:1px solid var(--line); box-shadow: var(--shadow);
+}
 .tab-btn{
-  flex:1 1 100px; display:flex; align-items:center; justify-content:center; gap:8px;
-  padding:11px 10px; border-radius:10px; border:1px solid var(--line);
+  flex:1 1 84px; display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:9px 10px; border-radius:9px; border:1px solid var(--line);
   background: var(--panel); color:var(--text-dim); cursor:pointer;
-  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:13.5px; letter-spacing:.02em;
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; letter-spacing:.02em;
   transition: all .15s ease; white-space:nowrap;
 }
 .tab-btn:hover{ color:var(--text); }
 .tab-btn.active{ background: linear-gradient(180deg, var(--panel-3), var(--panel-2)); color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
 .tab-panel[hidden]{ display:none; }
+
+/* ---------- barra valute fissa in basso ---------- */
+.curbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:40;
+  display:flex; align-items:center; gap:6px; overflow-x:auto; flex-wrap:nowrap;
+  max-width:1100px; margin:0 auto; width:100%;
+  padding: 7px max(14px, env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border-top:1px solid var(--line); box-shadow: 0 -8px 24px -12px rgba(0,0,0,.5);
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.curbar::-webkit-scrollbar{ display:none; }
+.cur-chip{
+  flex:0 0 auto; display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:20px;
+  background: var(--panel-3); border:1px solid var(--line); white-space:nowrap;
+}
+.cur-chip .ic{ font-size:12px; }
+.cur-chip .val{
+  font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600;
+  font-variant-numeric:tabular-nums; color:var(--ore);
+}
+.cur-chip.rate{ background:transparent; border-color:transparent; padding-left:2px; }
+.cur-chip.rate .val{ color:var(--accent); font-size:10.5px; }
+.cur-chip.frag .val{ color:var(--newcur); }
 
 /* ---------- modules grid ---------- */
 .modules-grid{
@@ -350,7 +376,8 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .ship.busy .ship-state{ color:var(--ore); }
 .ship-route{ font-size:12.5px; color:var(--text-dim); margin-bottom:8px; }
 .ship-reward-hint{ font-size:11px; color:var(--text-faint); margin:0 0 8px; }
-.ship-reward-last{ font-size:12px; color:var(--good); margin:0 0 8px; font-weight:600; }
+.ship-reward-last{ font-size:12px; color:var(--good); margin:0 0 4px; font-weight:600; }
+.ship-reward-last.cur{ color:var(--newcur); margin:0 0 8px; }
 .route-chips{ display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
 .chip{
   font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:5px 8px; border-radius:20px;
@@ -366,11 +393,11 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   border-radius:8px; padding:6px 3px; color:var(--text-dim); background:var(--panel-3); cursor:pointer; line-height:1.5;
 }
 .upg:disabled{ opacity:.4; cursor:not-allowed; }
-.upg-cost{ color:var(--ore); }
+.upg-cost{ color:var(--newcur); }
 
 /* ---------- modal ---------- */
 .modal-overlay{
-  position:fixed; inset:0; z-index:20; background: rgba(4,5,14,.72); backdrop-filter: blur(3px);
+  position:fixed; inset:0; z-index:60; background: rgba(4,5,14,.72); backdrop-filter: blur(3px);
   display:flex; align-items:center; justify-content:center; padding:20px;
 }
 .modal-overlay[hidden]{ display:none; }
@@ -398,7 +425,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 
 @media (max-width:460px){
   .console-bar{ padding:14px; }
-  .readouts{ gap:14px; }
+  .cur-chip{ padding:5px 8px; }
 }
 
 </style>
@@ -413,26 +440,22 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       <span class="brand-icon" aria-hidden="true">⛏</span>
       <h1>ASTROMINER</h1>
     </div>
-    <div class="readouts">
-      <div class="readout credits">
-        <span class="label">Crediti</span>
-        <span class="value" id="credits-value">0</span>
-      </div>
-      <div class="readout rate">
-        <span class="label">Entrate</span>
-        <span class="value" id="rate-value">0 cr/s</span>
-      </div>
-    </div>
     <button class="icon-btn" id="reset-btn" title="Reimposta partita" aria-label="Reimposta partita">⟲</button>
   </header>
 
-  <nav class="tab-bar" role="tablist" aria-label="Sezioni">
+  <nav class="tab-bar" role="tablist" aria-label="Sezioni" id="tab-bar">
     <button class="tab-btn active" id="tab-btn-mining" data-tab="mining" role="tab" aria-selected="true">⛏ Miniera</button>
     <button class="tab-btn" id="tab-btn-research" data-tab="research" role="tab" aria-selected="false">🧪 Laboratorio</button>
     <button class="tab-btn" id="tab-btn-bonus" data-tab="bonus" role="tab" aria-selected="false">🎁 Bonus</button>
     <button class="tab-btn" id="tab-btn-station" data-tab="station" role="tab" aria-selected="false">🏗️ Stazione</button>
     <button class="tab-btn" id="tab-btn-fleet" data-tab="fleet" role="tab" aria-selected="false">🚀 Flotta</button>
   </nav>
+
+  <footer class="curbar" id="curbar" aria-label="Valute">
+    <div class="cur-chip credits"><span class="ic">💰</span><span class="val" id="credits-value">0</span></div>
+    <div class="cur-chip rate"><span class="val" id="rate-value">0 cr/s</span></div>
+    <div class="cur-chip frag"><span class="ic">✦</span><span class="val" id="fragments-value">0</span></div>
+  </footer>
 
   <main class="tab-panel" id="panel-mining">
     <div class="modules-grid" id="modules-grid" aria-label="Moduli di estrazione"></div>
@@ -692,21 +715,27 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   // Flotta di Spedizioni: le navi partono in missione su una rotta a tempo e vanno richiamate
   // manualmente al ritorno per incassare il bottino (minerale più avanzato già sbloccato).
   var ROUTES = [
-    { key:"breve", name:"Rotta Breve", durationS:5*60, baseAmount:40 },
-    { key:"media", name:"Rotta Media", durationS:30*60, baseAmount:220 },
-    { key:"lunga", name:"Rotta Lunga", durationS:3*3600, baseAmount:1400 }
+    { key:"breve", name:"Rotta Breve", durationS:5*60, baseAmount:75, fragmentBase:8 },
+    { key:"media", name:"Rotta Media", durationS:30*60, baseAmount:400, fragmentBase:35 },
+    { key:"lunga", name:"Rotta Lunga", durationS:3*3600, baseAmount:2600, fragmentBase:180 }
   ];
   var SHIP_UPGRADE_MAX = 5;
   var SHIP_UPGRADE_LABELS = { speed:"⚡ Vel.", capacity:"📦 Stiva", luck:"🍀 Fortuna" };
+  var FRAGMENT_ICON = "✦";
+  var FRAGMENT_NAME = "Frammenti Stellari";
 
   function shipUpgradeCost(kind, shipIndex, level){
-    var base = { speed:400, capacity:600, luck:550 }[kind];
+    var base = { speed:20, capacity:28, luck:24 }[kind];
     return Math.round(base*Math.pow(2.3, level)*Math.pow(1.7, shipIndex));
   }
   function shipDuration(route, ship){ return route.durationS*Math.pow(0.92, ship.speedLevel); }
   function shipRewardAmount(route, ship){
     var mult = (1+ship.capacityLevel*0.35)*(1+ship.luckLevel*0.15);
     return Math.round(route.baseAmount*mult);
+  }
+  function shipFragmentAmount(route, ship){
+    var mult = (1+ship.luckLevel*0.15);
+    return Math.round(route.fragmentBase*mult);
   }
   function routeLabel(route){
     return route.durationS<3600 ? Math.round(route.durationS/60)+" min" : (route.durationS/3600)+" h";
@@ -770,6 +799,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   function defaultState(){
     return {
       credits: 0,
+      fragments: 0,
       totalEarned: 0,
       lastSave: Date.now(),
       minerals: [ { stock:0, timeLeft: mineralConfig(0).baseTime, speedLevel:0, yieldLevel:0, autoSell:false, autoUnlocked:false } ],
@@ -803,6 +833,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     if(!state.fleet || !Array.isArray(state.fleet.ships)){
       state.fleet = { ships: [ { speedLevel:0, capacityLevel:0, luckLevel:0, routeKey:null, endsAt:null } ] };
     }
+    if(typeof state.fragments !== "number"){ state.fragments = 0; }
     state.minerals.forEach(function(m){
       if(typeof m.autoUnlocked !== "boolean"){ m.autoUnlocked = !!m.autoSell; }
     });
@@ -854,6 +885,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   var grid = document.getElementById("modules-grid");
   var creditsEl = document.getElementById("credits-value");
   var rateEl = document.getElementById("rate-value");
+  var fragmentsEl = document.getElementById("fragments-value");
 
   function buildModules(){
     var html = "";
@@ -928,6 +960,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   function updateDOM(force){
     var mods = computeMods();
     creditsEl.textContent = fmt(state.credits)+" cr";
+    if(fragmentsEl) fragmentsEl.textContent = FRAGMENT_ICON+" "+fmt(state.fragments);
 
     var rate = 0;
     state.minerals.forEach(function(m,i){
@@ -1398,7 +1431,10 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
           (ready?'✅ Richiama nave':'⏳ In viaggio…')+
         '</button>';
     } else {
-      body = (ship.lastReward ? '<p class="ship-reward-last">✅ Ultimo rientro: +'+fmtInt(ship.lastReward.amount)+' '+ship.lastReward.name+'</p>' : '')+
+      body = (ship.lastReward ? (
+          '<p class="ship-reward-last">✅ Ultimo rientro: +'+fmtInt(ship.lastReward.amount)+' '+ship.lastReward.name+'</p>'+
+          '<p class="ship-reward-last cur">'+FRAGMENT_ICON+' +'+fmtInt(ship.lastReward.fragments||0)+' '+FRAGMENT_NAME+'</p>'
+        ) : '')+
         '<p class="ship-reward-hint">Ricompensa in '+rewardName+' — cambia con rotta e potenziamenti.</p>'+
         '<div class="route-chips" data-ship="'+idx+'">'+
         ROUTES.map(function(r,ri){
@@ -1451,7 +1487,9 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     var amount = shipRewardAmount(route, ship);
     var mineralIdx = state.minerals.length-1;
     state.minerals[mineralIdx].stock += amount;
-    ship.lastReward = { name: mineralConfig(mineralIdx).name, amount: amount };
+    var fragAmount = shipFragmentAmount(route, ship);
+    state.fragments += fragAmount;
+    ship.lastReward = { name: mineralConfig(mineralIdx).name, amount: amount, fragments: fragAmount };
     ship.routeKey = null; ship.endsAt = null;
     renderFleet();
     saveGame();
@@ -1462,8 +1500,8 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     var lvl = ship[kind+"Level"];
     if(lvl>=SHIP_UPGRADE_MAX) return;
     var cost = shipUpgradeCost(kind, idx, lvl);
-    if(state.credits<cost) return;
-    state.credits -= cost;
+    if(state.fragments<cost) return;
+    state.fragments -= cost;
     ship[kind+"Level"] = lvl+1;
     renderFleet();
     saveGame();
@@ -1493,9 +1531,9 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
         if(lvl>=SHIP_UPGRADE_MAX) return;
         var cost = shipUpgradeCost(kind, idx, lvl);
         var costEl = document.getElementById("upg-cost-"+idx+"-"+kind);
-        if(costEl) costEl.textContent = fmt(cost)+" cr";
+        if(costEl) costEl.textContent = FRAGMENT_ICON+" "+fmt(cost);
         var btn = document.querySelector('.upg[data-ship="'+idx+'"][data-upgrade="'+kind+'"]');
-        if(btn) btn.disabled = state.credits < cost;
+        if(btn) btn.disabled = state.fragments < cost;
       });
     });
   }
@@ -1668,6 +1706,14 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     document.getElementById("welcome-overlay").hidden = true;
   });
 
+  // ---------------- barre fisse: misura altezza reale e aggiorna il padding dello stage ----------------
+  var tabBarEl = document.getElementById("tab-bar");
+  var curbarEl = document.getElementById("curbar");
+  function updateFixedBarOffsets(){
+    if(tabBarEl){ document.documentElement.style.setProperty("--tabbar-h", tabBarEl.offsetHeight+"px"); }
+    if(curbarEl){ document.documentElement.style.setProperty("--curbar-h", curbarEl.offsetHeight+"px"); }
+  }
+
   // ---------------- boot ----------------
   function start(hotData){
     loadGame(hotData);
@@ -1680,6 +1726,10 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     renderStation();
     renderFleet();
     if(report) showWelcome(report);
+
+    updateFixedBarOffsets();
+    window.addEventListener("resize", updateFixedBarOffsets);
+    window.addEventListener("orientationchange", updateFixedBarOffsets);
 
     setInterval(function(){
       var now = Date.now();
