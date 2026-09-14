@@ -89,18 +89,16 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   padding: calc(var(--topbar-h) + 20px) max(20px, env(safe-area-inset-right)) calc(var(--tabbar-h) + 22px) max(20px, env(safe-area-inset-left));
 }
 
-/* ---------- logo, fisso in alto (non scorre) ---------- */
+/* ---------- barra valute, fissa in alto (non scorre) ---------- */
 .topbar-fixed{
   position:fixed; top:0; left:0; right:0; z-index:40;
   max-width:1100px; margin:0 auto; width:100%;
 }
-
-/* ---------- barra valute: normale contenuto, scorre con la pagina ---------- */
 .curbar{
   display:flex; align-items:center; gap:6px; overflow-x:auto; flex-wrap:nowrap;
-  padding:8px 10px; margin-bottom:18px; border-radius: var(--radius);
+  padding: calc(7px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 7px max(14px, env(safe-area-inset-left));
   background: linear-gradient(180deg, var(--panel), var(--panel-2));
-  border:1px solid var(--line); box-shadow: var(--shadow);
+  border-bottom:1px solid var(--line); box-shadow: var(--shadow);
   -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
 .curbar::-webkit-scrollbar{ display:none; }
@@ -117,22 +115,24 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .cur-chip.rate .val{ color:var(--accent); font-size:10.5px; }
 .cur-chip.frag .val{ color:var(--newcur); }
 
+/* ---------- logo: normale contenuto, scorre con la pagina ---------- */
 .console-bar{
   display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-  padding: calc(10px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));
-  background: linear-gradient(180deg, var(--panel-2), var(--panel));
-  border-bottom:1px solid var(--line); box-shadow: var(--shadow);
+  padding:14px 16px; margin-bottom:18px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border:1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 .brand{ display:flex; align-items:center; gap:9px; margin-right:auto; }
-.brand-icon{ font-size:18px; filter: drop-shadow(0 0 6px var(--accent)); }
+.brand-icon{ font-size:20px; filter: drop-shadow(0 0 6px var(--accent)); }
 .brand h1{
-  font-family:'Orbitron',sans-serif; font-weight:800; font-size: clamp(15px,2.6vw,19px);
+  font-family:'Orbitron',sans-serif; font-weight:800; font-size: clamp(16px,2.8vw,21px);
   letter-spacing:.06em; margin:0; color:var(--text);
   text-shadow: 0 0 18px var(--accent-soft);
 }
 .icon-btn{
-  width:32px; height:32px; border-radius:9px; border:1px solid var(--line);
-  background: var(--panel-3); color:var(--text-dim); font-size:14px; cursor:pointer;
+  width:34px; height:34px; border-radius:9px; border:1px solid var(--line);
+  background: var(--panel-3); color:var(--text-dim); font-size:15px; cursor:pointer;
   display:flex; align-items:center; justify-content:center; transition: all .15s ease;
 }
 .icon-btn:hover{ color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
@@ -437,13 +437,11 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 
 <div class="starfield" aria-hidden="true"></div>
 <div class="topbar-fixed" id="topbar-fixed">
-  <header class="console-bar">
-    <div class="brand">
-      <span class="brand-icon" aria-hidden="true">⛏</span>
-      <h1>ASTROMINER</h1>
-    </div>
-    <button class="icon-btn" id="reset-btn" title="Reimposta partita" aria-label="Reimposta partita">⟲</button>
-  </header>
+  <div class="curbar" aria-label="Valute">
+    <div class="cur-chip credits"><span class="ic">💰</span><span class="val" id="credits-value">0</span></div>
+    <div class="cur-chip rate"><span class="val" id="rate-value">0 cr/s</span></div>
+    <div class="cur-chip frag"><span class="ic">✦</span><span class="val" id="fragments-value">0</span></div>
+  </div>
 </div>
 
 <nav class="tab-bar" role="tablist" aria-label="Sezioni" id="tab-bar">
@@ -456,11 +454,13 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 
 <div class="stage">
 
-  <div class="curbar" aria-label="Valute">
-    <div class="cur-chip credits"><span class="ic">💰</span><span class="val" id="credits-value">0</span></div>
-    <div class="cur-chip rate"><span class="val" id="rate-value">0 cr/s</span></div>
-    <div class="cur-chip frag"><span class="ic">✦</span><span class="val" id="fragments-value">0</span></div>
-  </div>
+  <header class="console-bar">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">⛏</span>
+      <h1>ASTROMINER</h1>
+    </div>
+    <button class="icon-btn" id="reset-btn" title="Reimposta partita" aria-label="Reimposta partita">⟲</button>
+  </header>
 
   <main class="tab-panel" id="panel-mining">
     <div class="modules-grid" id="modules-grid" aria-label="Moduli di estrazione"></div>
