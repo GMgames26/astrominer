@@ -283,6 +283,89 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .btn-bonus{ background: var(--premium-soft); border-color:var(--premium); color:var(--premium); font-size:14px; padding:10px 12px; justify-content:center; }
 .btn-bonus:disabled{ background:var(--panel-3); border-color:var(--line); color:var(--text-faint); }
 
+/* ---------- stazione spaziale: mappa esagonale ---------- */
+.hexmap-wrap{ display:flex; justify-content:center; margin:6px 0 4px; }
+.hexmap{ position:relative; width:100%; max-width:440px; aspect-ratio:520/480; margin:0 auto; }
+.hexmap svg{ position:absolute; inset:0; width:100%; height:100%; z-index:1; }
+.hex-line{ stroke:var(--line); stroke-width:1; opacity:.35; transition: opacity .5s ease; }
+.hex-line.active{
+  stroke:var(--accent); stroke-width:2.5; stroke-dasharray:7 6; opacity:1;
+  filter: drop-shadow(0 0 3px var(--accent)); animation: hexFlow 1s linear infinite;
+}
+@keyframes hexFlow{ to{ stroke-dashoffset:-26; } }
+.hex{
+  position:absolute; width:25%; aspect-ratio:126/112; transform:translate(-50%,-50%);
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  text-align:center; padding:4px; cursor:pointer; z-index:2;
+  background: linear-gradient(155deg, #1c234f, #0e1230 65%);
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 -10px 18px rgba(0,0,0,.45), 0 10px 18px -8px rgba(0,0,0,.6);
+  transition: transform .15s ease, box-shadow .3s ease, border-color .3s ease, opacity .3s ease;
+}
+.hex:hover{ transform:translate(-50%,-50%) scale(1.07); z-index:5; }
+.hex .hex-icon{ font-size:19px; }
+.hex .hex-name{ font-size:10px; font-weight:700; line-height:1.15; color:var(--text); }
+.hex .hex-lv{ font-family:'JetBrains Mono',monospace; font-size:8.5px; color:var(--text-faint); }
+.hex.core{
+  cursor:default; border-color:var(--accent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 -10px 18px rgba(0,0,0,.4), 0 0 26px rgba(34,211,238,.45);
+}
+.hex.core:hover{ transform:translate(-50%,-50%); }
+.hex.built{
+  border-color:var(--violet);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), inset 0 -10px 16px rgba(0,0,0,.4), 0 0 16px rgba(167,139,250,.4);
+}
+.hex.done{
+  border-color:var(--good);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1), inset 0 -10px 16px rgba(0,0,0,.4), 0 0 16px rgba(52,211,153,.4);
+}
+.hex.buildable{ border-color:var(--ore); animation: hexPulse 1.6s ease-in-out infinite; }
+@keyframes hexPulse{
+  0%,100%{ box-shadow: inset 0 1px 0 rgba(255,255,255,.1), inset 0 -10px 16px rgba(0,0,0,.4), 0 0 6px var(--ore); }
+  50%{ box-shadow: inset 0 1px 0 rgba(255,255,255,.1), inset 0 -10px 16px rgba(0,0,0,.4), 0 0 18px var(--ore); }
+}
+.hex.locked{ opacity:.42; filter:grayscale(.6); }
+.hex.mystery{ opacity:.32; filter:grayscale(1); }
+.core-ring{
+  display:block; position:absolute; left:50%; top:50%; width:29%; aspect-ratio:1/1;
+  transform:translate(-50%,-50%); border-radius:50%; z-index:1; pointer-events:none;
+  border:2px dashed rgba(34,211,238,.5); animation: coreSpin 9s linear infinite;
+}
+@keyframes coreSpin{ from{ transform:translate(-50%,-50%) rotate(0deg); } to{ transform:translate(-50%,-50%) rotate(360deg); } }
+
+/* ---------- flotta di spedizioni ---------- */
+.fleet-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap:16px; }
+.ship{
+  position:relative; background: linear-gradient(165deg, var(--panel), var(--panel-2));
+  border:1px solid var(--line); border-radius: var(--radius); padding:16px; box-shadow: var(--shadow);
+  border-top:3px solid var(--accent);
+}
+.ship.busy{ border-top-color: var(--ore); }
+.ship-head{ display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+.ship-icon{ font-size:18px; }
+.ship-name{ font-weight:700; font-size:15.5px; flex:1; font-family:'Rajdhani',sans-serif; }
+.ship-state{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); }
+.ship.busy .ship-state{ color:var(--ore); }
+.ship-route{ font-size:12.5px; color:var(--text-dim); margin-bottom:8px; }
+.ship-reward-hint{ font-size:11px; color:var(--text-faint); margin:0 0 8px; }
+.route-chips{ display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+.chip{
+  font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:5px 8px; border-radius:20px;
+  border:1px solid var(--line); color:var(--text-dim); background: var(--panel-3); cursor:pointer;
+}
+.chip.sel{ border-color:var(--accent); color:var(--accent); background: var(--accent-soft); }
+.btn.launch{ background: var(--accent-soft); border-color:var(--accent); color:var(--accent); justify-content:center; }
+.btn.recall{ background: var(--panel-3); border-color:var(--line); color:var(--text-faint); justify-content:center; }
+.btn.recall.ready{ background: var(--good-soft); border-color:var(--good); color:var(--good); }
+.upg-row{ display:flex; gap:6px; margin-top:10px; }
+.upg{
+  flex:1; text-align:center; font-family:'JetBrains Mono',monospace; font-size:10px; border:1px solid var(--line);
+  border-radius:8px; padding:6px 3px; color:var(--text-dim); background:var(--panel-3); cursor:pointer; line-height:1.5;
+}
+.upg:disabled{ opacity:.4; cursor:not-allowed; }
+.upg-cost{ color:var(--ore); }
+
 /* ---------- modal ---------- */
 .modal-overlay{
   position:fixed; inset:0; z-index:20; background: rgba(4,5,14,.72); backdrop-filter: blur(3px);
@@ -341,6 +424,8 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     <button class="tab-btn active" id="tab-btn-mining" data-tab="mining" role="tab" aria-selected="true">⛏ Miniera</button>
     <button class="tab-btn" id="tab-btn-research" data-tab="research" role="tab" aria-selected="false">🧪 Laboratorio</button>
     <button class="tab-btn" id="tab-btn-bonus" data-tab="bonus" role="tab" aria-selected="false">🎁 Bonus</button>
+    <button class="tab-btn" id="tab-btn-station" data-tab="station" role="tab" aria-selected="false">🏗️ Stazione</button>
+    <button class="tab-btn" id="tab-btn-fleet" data-tab="fleet" role="tab" aria-selected="false">🚀 Flotta</button>
   </nav>
 
   <main class="tab-panel" id="panel-mining">
@@ -363,6 +448,21 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     <div class="bonus-grid" id="bonus-grid"></div>
   </section>
 
+  <section class="tab-panel" id="panel-station" hidden>
+    <div class="research-intro">
+      <p>Costruisci moduli sulla stazione con minerali estratti e crediti. Ogni modulo dà un bonus permanente diverso da quelli del Laboratorio, e si può potenziare fino a 3 volte. Tocca un modulo della mappa per i dettagli.</p>
+    </div>
+    <div id="station-hexmap"></div>
+  </section>
+
+  <section class="tab-panel" id="panel-fleet" hidden>
+    <div class="research-intro">
+      <p>Manda le tue navi in missione su una rotta a scelta: più dura, più rende. Mentre sono in viaggio non serve fare nulla — torna dopo e richiamale per incassare il bottino, in minerale.</p>
+      <span class="research-progress" id="fleet-slot-hint"></span>
+    </div>
+    <div class="fleet-grid" id="fleet-grid"></div>
+  </section>
+
   <p class="footnote">Progressi salvati automaticamente in questo browser · continuano anche mentre non giochi</p>
 </div>
 
@@ -378,6 +478,10 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 
 <div class="modal-overlay" id="ability-overlay" hidden>
   <div class="modal" id="ability-modal-body"></div>
+</div>
+
+<div class="modal-overlay" id="station-overlay" hidden>
+  <div class="modal" id="station-modal-body"></div>
 </div>
 
 <div class="modal-overlay" id="reset-overlay" hidden>
@@ -537,6 +641,84 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       effects:[{type:"upgradeDiscount", value:0.20},{type:"value", value:0.10},{type:"offlineMult", value:0.08}], desc:"-20% sul costo dei potenziamenti, +10% valore di vendita e +8% efficienza produttiva offline." }
   ];
 
+  // Stazione Spaziale: 5 moduli costruibili (3 livelli ciascuno) disposti su una mappa esagonale
+  // attorno a un nucleo centrale, più uno slot "sconosciuto" non ancora sbloccabile.
+  var STATION_MODULES = [
+    { id:"hangar", name:"Hangar Navale", icon:"🛰️", pos:{left:"50%", top:"14.6%"}, line:{x2:260, y2:70},
+      levels:[
+        { credits:6000, cost:[{mineralIndex:2, amount:70},{mineralIndex:3, amount:50}], effects:[{type:"fleetSlot", value:1}], desc:"+1 slot nave nella Flotta di Spedizioni." },
+        { credits:45000, cost:[{mineralIndex:4, amount:130},{mineralIndex:5, amount:90}], effects:[{type:"fleetSlot", value:1}], desc:"+1 ulteriore slot nave nella Flotta." },
+        { credits:260000, cost:[{mineralIndex:6, amount:190},{mineralIndex:7, amount:150}], effects:[{type:"fleetSlot", value:1}], desc:"+1 ulteriore slot nave nella Flotta." }
+      ]
+    },
+    { id:"raffineria", name:"Raffineria Orbitale", icon:"⚗️", pos:{left:"78.3%", top:"32.3%"}, line:{x2:407, y2:155},
+      levels:[
+        { credits:9000, cost:[{mineralIndex:2, amount:90}], effects:[{type:"value", value:0.05}], desc:"+5% valore di vendita su tutti i minerali." },
+        { credits:65000, cost:[{mineralIndex:4, amount:150},{mineralIndex:5, amount:80}], effects:[{type:"value", value:0.06}], desc:"+6% aggiuntivo di valore di vendita." },
+        { credits:420000, cost:[{mineralIndex:6, amount:210},{mineralIndex:7, amount:130}], effects:[{type:"value", value:0.07}], desc:"+7% aggiuntivo di valore di vendita." }
+      ]
+    },
+    { id:"deposito", name:"Deposito Cargo", icon:"📦", pos:{left:"78.3%", top:"67.7%"}, line:{x2:407, y2:325},
+      levels:[
+        { credits:13000, cost:[{mineralIndex:3, amount:85}], effects:[{type:"offlineMult", value:0.03}], desc:"+3% efficienza produttiva offline." },
+        { credits:95000, cost:[{mineralIndex:5, amount:140},{mineralIndex:6, amount:85}], effects:[{type:"offlineMult", value:0.04}], desc:"+4% aggiuntivo di efficienza offline." },
+        { credits:620000, cost:[{mineralIndex:7, amount:200},{mineralIndex:8, amount:140}], effects:[{type:"offlineMult", value:0.05}], desc:"+5% aggiuntivo di efficienza offline." }
+      ]
+    },
+    { id:"torre", name:"Torre di Comando", icon:"📡", pos:{left:"50%", top:"85.4%"}, line:{x2:260, y2:410},
+      requires:{module:"deposito", level:2},
+      levels:[
+        { credits:22000, cost:[{mineralIndex:4, amount:110}], effects:[{type:"unlockDiscount", value:0.04}], desc:"-4% sul costo di sblocco dei nuovi minerali." },
+        { credits:160000, cost:[{mineralIndex:6, amount:170},{mineralIndex:7, amount:110}], effects:[{type:"unlockDiscount", value:0.05}], desc:"-5% aggiuntivo sul costo di sblocco." },
+        { credits:950000, cost:[{mineralIndex:8, amount:230},{mineralIndex:9, amount:170}], effects:[{type:"unlockDiscount", value:0.06}], desc:"-6% aggiuntivo sul costo di sblocco." }
+      ]
+    },
+    { id:"centroRicerca", name:"Centro Ricerca Avanzato", icon:"🔬", pos:{left:"21.7%", top:"67.7%"}, line:{x2:113, y2:325},
+      requires:{module:"raffineria", level:1},
+      levels:[
+        { credits:16000, cost:[{mineralIndex:3, amount:95}], effects:[{type:"upgradeDiscount", value:0.04}], desc:"-4% sul costo dei potenziamenti Velocità e Resa." },
+        { credits:120000, cost:[{mineralIndex:5, amount:150},{mineralIndex:6, amount:95}], effects:[{type:"upgradeDiscount", value:0.05}], desc:"-5% aggiuntivo sul costo dei potenziamenti." },
+        { credits:760000, cost:[{mineralIndex:7, amount:210},{mineralIndex:8, amount:150}], effects:[{type:"upgradeDiscount", value:0.06}], desc:"-6% aggiuntivo sul costo dei potenziamenti." }
+      ]
+    }
+  ];
+
+  // Flotta di Spedizioni: le navi partono in missione su una rotta a tempo e vanno richiamate
+  // manualmente al ritorno per incassare il bottino (minerale più avanzato già sbloccato).
+  var ROUTES = [
+    { key:"breve", name:"Rotta Breve", durationS:5*60, baseAmount:40 },
+    { key:"media", name:"Rotta Media", durationS:30*60, baseAmount:220 },
+    { key:"lunga", name:"Rotta Lunga", durationS:3*3600, baseAmount:1400 }
+  ];
+  var SHIP_UPGRADE_MAX = 5;
+  var SHIP_UPGRADE_LABELS = { speed:"⚡ Vel.", capacity:"📦 Stiva", luck:"🍀 Fortuna" };
+
+  function shipUpgradeCost(kind, shipIndex, level){
+    var base = { speed:400, capacity:600, luck:550 }[kind];
+    return Math.round(base*Math.pow(2.3, level)*Math.pow(1.7, shipIndex));
+  }
+  function shipDuration(route, ship){ return route.durationS*Math.pow(0.92, ship.speedLevel); }
+  function shipRewardAmount(route, ship){
+    var mult = (1+ship.capacityLevel*0.35)*(1+ship.luckLevel*0.15);
+    return Math.round(route.baseAmount*mult);
+  }
+  function routeLabel(route){
+    return route.durationS<3600 ? Math.round(route.durationS/60)+" min" : (route.durationS/3600)+" h";
+  }
+  function fmtDuration(s){
+    var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = Math.floor(s%60);
+    if(h>0) return h+"h "+m+"min";
+    if(m>0) return m+"min "+sec+"s";
+    return sec+"s";
+  }
+  function totalShipSlots(){ return 1+Math.round(computeMods().fleetSlots||0); }
+  function syncFleetSlots(){
+    var total = totalShipSlots();
+    while(state.fleet.ships.length < total){
+      state.fleet.ships.push({ speedLevel:0, capacityLevel:0, luckLevel:0, routeKey:null, endsAt:null });
+    }
+  }
+
   function applyEffectsToMods(mods, effects){
     effects.forEach(function(e){
       if(e.type==="speed") mods.speedMult *= (1-e.value);
@@ -545,16 +727,21 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       else if(e.type==="unlockDiscount") mods.unlockMult *= (1-e.value);
       else if(e.type==="upgradeDiscount") mods.upgradeMult *= (1-e.value);
       else if(e.type==="offlineMult") mods.offlineBonus += e.value;
+      else if(e.type==="fleetSlot") mods.fleetSlots += e.value;
     });
   }
 
   function computeMods(){
-    var mods = { speedMult:1, valueMult:1, yieldBonus:0, unlockMult:1, upgradeMult:1, offlineBonus:0 };
+    var mods = { speedMult:1, valueMult:1, yieldBonus:0, unlockMult:1, upgradeMult:1, offlineBonus:0, fleetSlots:0 };
     RESEARCH_TREE.forEach(function(n){
       if(state.research[n.id]) applyEffectsToMods(mods, n.effects);
     });
     BONUS_ITEMS.forEach(function(n){
       if(state.bonuses[n.id]) applyEffectsToMods(mods, n.effects);
+    });
+    STATION_MODULES.forEach(function(mod){
+      var lvl = state.station[mod.id]||0;
+      for(var i=0;i<lvl;i++){ applyEffectsToMods(mods, mod.levels[i].effects); }
     });
     return mods;
   }
@@ -581,7 +768,9 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       lastSave: Date.now(),
       minerals: [ { stock:0, timeLeft: mineralConfig(0).baseTime, speedLevel:0, yieldLevel:0, autoSell:false, autoUnlocked:false } ],
       research: {},
-      bonuses: {}
+      bonuses: {},
+      station: { hangar:0, raffineria:0, deposito:0, torre:0, centroRicerca:0 },
+      fleet: { ships: [ { speedLevel:0, capacityLevel:0, luckLevel:0, routeKey:null, endsAt:null } ] }
     };
   }
 
@@ -602,6 +791,12 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     }
     if(!state.research || typeof state.research !== "object"){ state.research = {}; }
     if(!state.bonuses || typeof state.bonuses !== "object"){ state.bonuses = {}; }
+    if(!state.station || typeof state.station !== "object"){
+      state.station = { hangar:0, raffineria:0, deposito:0, torre:0, centroRicerca:0 };
+    }
+    if(!state.fleet || !Array.isArray(state.fleet.ships)){
+      state.fleet = { ships: [ { speedLevel:0, capacityLevel:0, luckLevel:0, routeKey:null, endsAt:null } ] };
+    }
     state.minerals.forEach(function(m){
       if(typeof m.autoUnlocked !== "boolean"){ m.autoUnlocked = !!m.autoSell; }
     });
@@ -778,6 +973,8 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 
     updateResearchAfford();
     updateBonusAfford();
+    updateStationAfford();
+    updateFleetTimers();
   }
 
   // ---------------- research lab ----------------
@@ -1018,27 +1215,344 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     buyBonus(btn.getAttribute("data-bonus"));
   });
 
+  // ---------------- stazione spaziale ----------------
+  var stationTreeEl = document.getElementById("station-hexmap");
+  var stationOverlay = document.getElementById("station-overlay");
+  var stationModalBody = document.getElementById("station-modal-body");
+  var openStationId = null;
+
+  function stationModulePrereqOk(mod){
+    if(!mod.requires) return true;
+    return (state.station[mod.requires.module]||0) >= mod.requires.level;
+  }
+  function stationModuleUnlocked(mod){
+    var lvl = state.station[mod.id]||0;
+    if(lvl>=mod.levels.length) return true;
+    var next = mod.levels[lvl];
+    return next.cost.every(function(c){ return c.mineralIndex < state.minerals.length; });
+  }
+  function stationModuleAffordable(mod){
+    var lvl = state.station[mod.id]||0;
+    if(lvl>=mod.levels.length) return false;
+    var next = mod.levels[lvl];
+    if(state.credits < next.credits) return false;
+    return next.cost.every(function(c){ return state.minerals[c.mineralIndex].stock >= c.amount; });
+  }
+  function stationModuleClass(mod){
+    var lvl = state.station[mod.id]||0;
+    if(lvl>=mod.levels.length) return "done";
+    if(lvl>0) return "built";
+    if(!stationModulePrereqOk(mod)) return "locked";
+    return "buildable";
+  }
+
+  function renderStation(){
+    var html = '<div class="hexmap-wrap"><div class="hexmap">';
+    html += '<div class="core-ring"></div>';
+    html += '<svg viewBox="0 0 520 480" preserveAspectRatio="none">';
+    STATION_MODULES.forEach(function(mod){
+      var active = (state.station[mod.id]||0) > 0;
+      html += '<line class="hex-line'+(active?' active':'')+'" x1="260" y1="240" x2="'+mod.line.x2+'" y2="'+mod.line.y2+'"></line>';
+    });
+    html += '</svg>';
+    html += '<div class="hex core"><span class="hex-icon">🌐</span><span class="hex-name">Nucleo Stazione</span><span class="hex-lv">Sempre attivo</span></div>';
+    STATION_MODULES.forEach(function(mod){
+      var lvl = state.station[mod.id]||0;
+      var cls = stationModuleClass(mod);
+      var lvText = lvl>=mod.levels.length ? "MAX" : (lvl>0 ? "Lv. "+lvl+"/"+mod.levels.length : (cls==="locked" ? "Bloccato" : "Da costruire"));
+      html += '<div class="hex '+cls+'" style="left:'+mod.pos.left+';top:'+mod.pos.top+'" data-station="'+mod.id+'">'+
+        '<span class="hex-icon">'+mod.icon+'</span><span class="hex-name">'+mod.name+'</span><span class="hex-lv">'+lvText+'</span>'+
+      '</div>';
+    });
+    html += '<div class="hex mystery" style="left:21.7%;top:32.3%" data-station="mystery"><span class="hex-icon">❔</span><span class="hex-name">Modulo sconosciuto</span><span class="hex-lv">Da scoprire</span></div>';
+    html += '</div></div>';
+    stationTreeEl.innerHTML = html;
+    if(openStationId){ refreshStationModal(); }
+  }
+
+  function stationModalHTML(mod){
+    var lvl = state.station[mod.id]||0;
+    var maxed = lvl>=mod.levels.length;
+    var head = '<h2 style="color:var(--violet)">'+mod.icon+' '+mod.name+'</h2>'+
+      '<p style="color:var(--text-dim);font-size:12.5px;margin:0 0 12px;">Livello attuale: '+lvl+'/'+mod.levels.length+'</p>';
+    if(maxed){
+      return head+'<p class="rnode-status" style="color:var(--good)">✓ Modulo al livello massimo</p>'+
+        '<div class="modal-actions"><button class="btn" id="station-close">Chiudi</button></div>';
+    }
+    if(!stationModulePrereqOk(mod)){
+      var reqMod = STATION_MODULES.filter(function(m){ return m.id===mod.requires.module; })[0];
+      return head+'<p class="rnode-status">🔒 Richiede '+(reqMod?reqMod.name:mod.requires.module)+' a livello '+mod.requires.level+'.</p>'+
+        '<div class="modal-actions"><button class="btn" id="station-close">Chiudi</button></div>';
+    }
+    var next = mod.levels[lvl];
+    if(!stationModuleUnlocked(mod)){
+      var missing = next.cost.filter(function(c){ return c.mineralIndex>=state.minerals.length; })
+        .map(function(c){ return mineralConfig(c.mineralIndex).name; }).join(", ");
+      return head+'<p style="color:var(--text-dim);font-size:13px;margin:0 0 10px;">'+next.desc+'</p>'+
+        '<p class="rnode-status">🔒 Richiede di aver sbloccato: '+missing+'</p>'+
+        '<div class="modal-actions"><button class="btn" id="station-close">Chiudi</button></div>';
+    }
+    var costLines = '<div class="bnode-cost-credits" id="station-credits-'+mod.id+'">💰 '+fmt(next.credits)+' cr</div>'+
+      next.cost.map(function(c){ return researchCostLineHTML({id:"station-"+mod.id}, c); }).join('');
+    return head+
+      '<p style="color:var(--text-dim);font-size:13px;margin:0 0 12px;">'+next.desc+'</p>'+
+      '<div class="rnode-costs">'+costLines+'</div>'+
+      '<div class="modal-actions">'+
+        '<button class="btn" id="station-close">Chiudi</button>'+
+        '<button class="btn btn-primary" id="station-buy-btn" data-module="'+mod.id+'" '+(stationModuleAffordable(mod)?'':'disabled')+'>Costruisci/Potenzia</button>'+
+      '</div>';
+  }
+
+  function showStationModal(id){
+    var mod = STATION_MODULES.filter(function(m){ return m.id===id; })[0];
+    if(!mod) return;
+    openStationId = id;
+    stationModalBody.innerHTML = stationModalHTML(mod);
+    stationOverlay.hidden = false;
+  }
+  function showMysteryModal(){
+    openStationId = null;
+    stationModalBody.innerHTML =
+      '<h2 style="color:var(--text-faint)">❔ Modulo sconosciuto</h2>'+
+      '<p style="color:var(--text-dim);font-size:13px;margin:0 0 14px;">I sensori non hanno ancora identificato questo settore della stazione. Tornerà utile più avanti.</p>'+
+      '<div class="modal-actions"><button class="btn" id="station-close">Chiudi</button></div>';
+    stationOverlay.hidden = false;
+  }
+  function closeStationModal(){ openStationId = null; stationOverlay.hidden = true; }
+  function refreshStationModal(){
+    var mod = STATION_MODULES.filter(function(m){ return m.id===openStationId; })[0];
+    if(!mod) return;
+    var lvl = state.station[openStationId]||0;
+    if(lvl>=mod.levels.length || !stationModulePrereqOk(mod) || !stationModuleUnlocked(mod)){
+      stationModalBody.innerHTML = stationModalHTML(mod);
+      return;
+    }
+    var next = mod.levels[lvl];
+    next.cost.forEach(function(c){
+      var haveEl = document.getElementById("rhave-station-"+mod.id+"-"+c.mineralIndex);
+      if(haveEl) haveEl.textContent = "(hai "+fmtInt(state.minerals[c.mineralIndex].stock)+")";
+    });
+    var creditsEl3 = document.getElementById("station-credits-"+mod.id);
+    if(creditsEl3) creditsEl3.textContent = "💰 "+fmt(next.credits)+" cr";
+    var buyBtn = document.getElementById("station-buy-btn");
+    if(buyBtn) buyBtn.disabled = !stationModuleAffordable(mod);
+  }
+  function updateStationAfford(){ if(openStationId) refreshStationModal(); }
+
+  function buyStationModule(id){
+    var mod = STATION_MODULES.filter(function(m){ return m.id===id; })[0];
+    if(!mod) return;
+    var lvl = state.station[id]||0;
+    if(lvl>=mod.levels.length) return;
+    if(!stationModulePrereqOk(mod) || !stationModuleUnlocked(mod) || !stationModuleAffordable(mod)) return;
+    var next = mod.levels[lvl];
+    state.credits -= next.credits;
+    next.cost.forEach(function(c){ state.minerals[c.mineralIndex].stock -= c.amount; });
+    state.station[id] = lvl+1;
+    syncFleetSlots();
+    renderStation();
+    renderFleet();
+    saveGame();
+    if(openStationId===id){ stationModalBody.innerHTML = stationModalHTML(mod); }
+  }
+
+  stationTreeEl.addEventListener("click", function(ev){
+    var hexEl = ev.target.closest(".hex");
+    if(!hexEl) return;
+    var key = hexEl.getAttribute("data-station");
+    if(!key) return;
+    if(key==="mystery"){ showMysteryModal(); return; }
+    showStationModal(key);
+  });
+  stationOverlay.addEventListener("click", function(ev){
+    if(ev.target===stationOverlay || ev.target.closest("#station-close")){ closeStationModal(); return; }
+    var buyBtn = ev.target.closest("#station-buy-btn");
+    if(buyBtn && !buyBtn.disabled){ buyStationModule(buyBtn.getAttribute("data-module")); }
+  });
+
+  // ---------------- flotta di spedizioni ----------------
+  var fleetGridEl = document.getElementById("fleet-grid");
+  var fleetSlotHintEl = document.getElementById("fleet-slot-hint");
+  var pendingRoute = {};
+
+  function shipCardHTML(ship, idx){
+    var name = "Esploratore-"+romanize(idx+1);
+    var busy = !!ship.routeKey;
+    var ready = busy && Date.now() >= ship.endsAt;
+    var cardClass = "ship"+(busy?" busy":"");
+    var rewardIdx = state.minerals.length-1;
+    var rewardName = mineralConfig(rewardIdx).name;
+    var body;
+    if(busy){
+      var route = ROUTES.filter(function(r){ return r.key===ship.routeKey; })[0];
+      body = '<div class="ship-route">'+route.name+'</div>'+
+        '<div class="timer-track"><div class="timer-fill" id="fleet-fill-'+idx+'" style="width:0%"></div></div>'+
+        '<span class="timer-label" id="fleet-label-'+idx+'">In viaggio…</span>'+
+        '<button class="btn recall'+(ready?' ready':'')+'" id="fleet-recall-'+idx+'" data-ship="'+idx+'" '+(ready?'':'disabled')+'>'+
+          (ready?'✅ Richiama nave':'⏳ In viaggio…')+
+        '</button>';
+    } else {
+      body = '<p class="ship-reward-hint">Ricompensa in '+rewardName+' — cambia con rotta e potenziamenti.</p>'+
+        '<div class="route-chips" data-ship="'+idx+'">'+
+        ROUTES.map(function(r,ri){
+          return '<span class="chip'+(ri===0?' sel':'')+'" data-route="'+r.key+'">'+r.name+' · '+routeLabel(r)+'</span>';
+        }).join('')+
+        '</div>'+
+        '<button class="btn launch" data-ship="'+idx+'" data-action="launch">🚀 Lancia missione</button>';
+    }
+    var upgrades = '<div class="upg-row">'+
+      ["speed","capacity","luck"].map(function(kind){
+        var lvl = ship[kind+"Level"];
+        var maxed = lvl>=SHIP_UPGRADE_MAX;
+        return '<button class="upg" data-ship="'+idx+'" data-upgrade="'+kind+'" '+(maxed?'disabled':'')+'>'+
+          SHIP_UPGRADE_LABELS[kind]+' Lv.'+lvl+(maxed?' (MAX)':'<br><span class="upg-cost" id="upg-cost-'+idx+'-'+kind+'"></span>')+
+        '</button>';
+      }).join('')+
+    '</div>';
+    return '<div class="'+cardClass+'">'+
+      '<div class="ship-head"><span class="ship-icon">🛸</span><span class="ship-name">'+name+'</span><span class="ship-state">'+(busy?(ready?"Pronta":"In missione"):"In hangar")+'</span></div>'+
+      body+upgrades+
+    '</div>';
+  }
+
+  function renderFleet(){
+    syncFleetSlots();
+    fleetGridEl.innerHTML = state.fleet.ships.map(shipCardHTML).join('');
+    updateFleetTimers();
+    if(fleetSlotHintEl){
+      var hangarLvl = state.station.hangar||0;
+      fleetSlotHintEl.textContent = hangarLvl>=3
+        ? "Hangar Navale al massimo: "+state.fleet.ships.length+" navi disponibili."
+        : state.fleet.ships.length+" nav"+(state.fleet.ships.length===1?"e":"i")+" disponibil"+(state.fleet.ships.length===1?"e":"i")+" — potenzia l'Hangar Navale nella Stazione per sbloccarne altre.";
+    }
+  }
+
+  function launchShip(idx, routeKey){
+    var ship = state.fleet.ships[idx];
+    if(!ship || ship.routeKey) return;
+    var route = ROUTES.filter(function(r){ return r.key===routeKey; })[0];
+    if(!route) return;
+    ship.routeKey = routeKey;
+    ship.endsAt = Date.now()+shipDuration(route, ship)*1000;
+    renderFleet();
+    saveGame();
+  }
+  function recallShip(idx){
+    var ship = state.fleet.ships[idx];
+    if(!ship || !ship.routeKey || Date.now() < ship.endsAt) return;
+    var route = ROUTES.filter(function(r){ return r.key===ship.routeKey; })[0];
+    var amount = shipRewardAmount(route, ship);
+    var mineralIdx = state.minerals.length-1;
+    state.minerals[mineralIdx].stock += amount;
+    ship.routeKey = null; ship.endsAt = null;
+    renderFleet();
+    saveGame();
+  }
+  function buyShipUpgrade(idx, kind){
+    var ship = state.fleet.ships[idx];
+    if(!ship) return;
+    var lvl = ship[kind+"Level"];
+    if(lvl>=SHIP_UPGRADE_MAX) return;
+    var cost = shipUpgradeCost(kind, idx, lvl);
+    if(state.credits<cost) return;
+    state.credits -= cost;
+    ship[kind+"Level"] = lvl+1;
+    renderFleet();
+    saveGame();
+  }
+
+  function updateFleetTimers(){
+    state.fleet.ships.forEach(function(ship, idx){
+      if(ship.routeKey){
+        var route = ROUTES.filter(function(r){ return r.key===ship.routeKey; })[0];
+        var duration = shipDuration(route, ship)*1000;
+        var startAt = ship.endsAt-duration;
+        var now = Date.now();
+        var pct = Math.max(0, Math.min(100, ((now-startAt)/duration)*100));
+        var fillEl = document.getElementById("fleet-fill-"+idx);
+        if(fillEl) fillEl.style.width = pct.toFixed(1)+"%";
+        var labelEl = document.getElementById("fleet-label-"+idx);
+        var recallBtn = document.getElementById("fleet-recall-"+idx);
+        if(now >= ship.endsAt){
+          if(labelEl) labelEl.textContent = "Pronta al richiamo!";
+          if(recallBtn && recallBtn.disabled){ recallBtn.disabled = false; recallBtn.classList.add("ready"); recallBtn.innerHTML = "✅ Richiama nave"; }
+        } else if(labelEl){
+          labelEl.textContent = "Rientro tra "+fmtDuration((ship.endsAt-now)/1000);
+        }
+      }
+      ["speed","capacity","luck"].forEach(function(kind){
+        var lvl = ship[kind+"Level"];
+        if(lvl>=SHIP_UPGRADE_MAX) return;
+        var cost = shipUpgradeCost(kind, idx, lvl);
+        var costEl = document.getElementById("upg-cost-"+idx+"-"+kind);
+        if(costEl) costEl.textContent = fmt(cost)+" cr";
+        var btn = document.querySelector('.upg[data-ship="'+idx+'"][data-upgrade="'+kind+'"]');
+        if(btn) btn.disabled = state.credits < cost;
+      });
+    });
+  }
+
+  fleetGridEl.addEventListener("click", function(ev){
+    var chip = ev.target.closest(".chip");
+    if(chip){
+      var wrap = chip.closest(".route-chips");
+      var idxC = wrap.getAttribute("data-ship");
+      pendingRoute[idxC] = chip.getAttribute("data-route");
+      wrap.querySelectorAll(".chip").forEach(function(c){ c.classList.toggle("sel", c===chip); });
+      return;
+    }
+    var launchBtn = ev.target.closest('button[data-action="launch"]');
+    if(launchBtn){
+      var shipIdx = parseInt(launchBtn.getAttribute("data-ship"),10);
+      var routeKey = pendingRoute[shipIdx] || ROUTES[0].key;
+      launchShip(shipIdx, routeKey);
+      return;
+    }
+    var recallBtn2 = ev.target.closest("button.recall[data-ship]");
+    if(recallBtn2 && !recallBtn2.disabled){
+      recallShip(parseInt(recallBtn2.getAttribute("data-ship"),10));
+      return;
+    }
+    var upgBtn = ev.target.closest("button.upg[data-upgrade]");
+    if(upgBtn && !upgBtn.disabled){
+      buyShipUpgrade(parseInt(upgBtn.getAttribute("data-ship"),10), upgBtn.getAttribute("data-upgrade"));
+      return;
+    }
+  });
+
   // ---------------- tabs ----------------
   var tabBtnMining = document.getElementById("tab-btn-mining");
   var tabBtnResearch = document.getElementById("tab-btn-research");
   var tabBtnBonus = document.getElementById("tab-btn-bonus");
+  var tabBtnStation = document.getElementById("tab-btn-station");
+  var tabBtnFleet = document.getElementById("tab-btn-fleet");
   var panelMining = document.getElementById("panel-mining");
   var panelResearch = document.getElementById("panel-research");
   var panelBonus = document.getElementById("panel-bonus");
+  var panelStation = document.getElementById("panel-station");
+  var panelFleet = document.getElementById("panel-fleet");
   function selectTab(tab){
     panelMining.hidden = tab!=="mining";
     panelResearch.hidden = tab!=="research";
     panelBonus.hidden = tab!=="bonus";
+    panelStation.hidden = tab!=="station";
+    panelFleet.hidden = tab!=="fleet";
     tabBtnMining.classList.toggle("active", tab==="mining");
     tabBtnResearch.classList.toggle("active", tab==="research");
     tabBtnBonus.classList.toggle("active", tab==="bonus");
+    tabBtnStation.classList.toggle("active", tab==="station");
+    tabBtnFleet.classList.toggle("active", tab==="fleet");
     tabBtnMining.setAttribute("aria-selected", tab==="mining");
     tabBtnResearch.setAttribute("aria-selected", tab==="research");
     tabBtnBonus.setAttribute("aria-selected", tab==="bonus");
+    tabBtnStation.setAttribute("aria-selected", tab==="station");
+    tabBtnFleet.setAttribute("aria-selected", tab==="fleet");
   }
   tabBtnMining.addEventListener("click", function(){ selectTab("mining"); });
   tabBtnResearch.addEventListener("click", function(){ selectTab("research"); });
   tabBtnBonus.addEventListener("click", function(){ selectTab("bonus"); });
+  tabBtnStation.addEventListener("click", function(){ selectTab("station"); });
+  tabBtnFleet.addEventListener("click", function(){ selectTab("fleet"); });
 
   function pulse(i){
     var card = grid.querySelector('.module[data-i="'+i+'"]');
@@ -1093,6 +1607,8 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       buildModules();
       renderResearch();
       renderBonuses();
+      renderStation();
+      renderFleet();
       saveGame();
       return;
     } else {
@@ -1112,6 +1628,8 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     buildModules();
     renderResearch();
     renderBonuses();
+    renderStation();
+    renderFleet();
     saveGame();
   });
 
@@ -1145,11 +1663,14 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   // ---------------- boot ----------------
   function start(hotData){
     loadGame(hotData);
+    syncFleetSlots();
     var report = applyOfflineProgress();
     lastTick = Date.now();
     buildModules();
     renderResearch();
     renderBonuses();
+    renderStation();
+    renderFleet();
     if(report) showWelcome(report);
 
     setInterval(function(){
