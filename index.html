@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Astrominer</title>
-<meta name="description" content="Gioco idle di estrazione mineraria spaziale con laboratorio di ricerca.">
-<meta name="theme-color" content="#05060f">
+<meta name="theme-color" content="#05060a">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Astrominer">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png">
+<title>Astrominer</title>
 <style>
+
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
 :root{
@@ -350,6 +350,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .ship.busy .ship-state{ color:var(--ore); }
 .ship-route{ font-size:12.5px; color:var(--text-dim); margin-bottom:8px; }
 .ship-reward-hint{ font-size:11px; color:var(--text-faint); margin:0 0 8px; }
+.ship-reward-last{ font-size:12px; color:var(--good); margin:0 0 8px; font-weight:600; }
 .route-chips{ display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
 .chip{
   font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:5px 8px; border-radius:20px;
@@ -399,7 +400,11 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   .console-bar{ padding:14px; }
   .readouts{ gap:14px; }
 }
+
 </style>
+</head>
+<body>
+
 
 <div class="starfield" aria-hidden="true"></div>
 <div class="stage">
@@ -1393,7 +1398,8 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
           (ready?'✅ Richiama nave':'⏳ In viaggio…')+
         '</button>';
     } else {
-      body = '<p class="ship-reward-hint">Ricompensa in '+rewardName+' — cambia con rotta e potenziamenti.</p>'+
+      body = (ship.lastReward ? '<p class="ship-reward-last">✅ Ultimo rientro: +'+fmtInt(ship.lastReward.amount)+' '+ship.lastReward.name+'</p>' : '')+
+        '<p class="ship-reward-hint">Ricompensa in '+rewardName+' — cambia con rotta e potenziamenti.</p>'+
         '<div class="route-chips" data-ship="'+idx+'">'+
         ROUTES.map(function(r,ri){
           return '<span class="chip'+(ri===0?' sel':'')+'" data-route="'+r.key+'">'+r.name+' · '+routeLabel(r)+'</span>';
@@ -1445,6 +1451,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     var amount = shipRewardAmount(route, ship);
     var mineralIdx = state.minerals.length-1;
     state.minerals[mineralIdx].stock += amount;
+    ship.lastReward = { name: mineralConfig(mineralIdx).name, amount: amount };
     ship.routeKey = null; ship.endsAt = null;
     renderFleet();
     saveGame();
@@ -1699,12 +1706,13 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   }
 })();
 </script>
+
 <script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function(){
-      navigator.serviceWorker.register("service-worker.js").catch(function(){});
-    });
-  }
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("./service-worker.js");
+  });
+}
 </script>
 </body>
 </html>
