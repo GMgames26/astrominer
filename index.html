@@ -194,6 +194,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .research-intro{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
 .research-intro p{ margin:0; color:var(--text-dim); font-size:13.5px; max-width:56ch; }
 .research-progress{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--violet); white-space:nowrap; }
+.fleet-hint{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--violet); line-height:1.5; }
 
 .research-root-wrap{ display:flex; flex-direction:column; align-items:center; margin-bottom:4px; }
 .rstem{ width:2px; height:22px; background:var(--line); }
@@ -294,7 +295,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 }
 @keyframes hexFlow{ to{ stroke-dashoffset:-26; } }
 .hex{
-  position:absolute; width:25%; aspect-ratio:126/112; transform:translate(-50%,-50%);
+  position:absolute; left:50%; top:50%; width:25%; aspect-ratio:126/112; transform:translate(-50%,-50%);
   clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
   text-align:center; padding:4px; cursor:pointer; z-index:2;
@@ -458,7 +459,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   <section class="tab-panel" id="panel-fleet" hidden>
     <div class="research-intro">
       <p>Manda le tue navi in missione su una rotta a scelta: più dura, più rende. Mentre sono in viaggio non serve fare nulla — torna dopo e richiamale per incassare il bottino, in minerale.</p>
-      <span class="research-progress" id="fleet-slot-hint"></span>
+      <span class="fleet-hint" id="fleet-slot-hint"></span>
     </div>
     <div class="fleet-grid" id="fleet-grid"></div>
   </section>
@@ -1255,7 +1256,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       html += '<line class="hex-line'+(active?' active':'')+'" x1="260" y1="240" x2="'+mod.line.x2+'" y2="'+mod.line.y2+'"></line>';
     });
     html += '</svg>';
-    html += '<div class="hex core"><span class="hex-icon">🌐</span><span class="hex-name">Nucleo Stazione</span><span class="hex-lv">Sempre attivo</span></div>';
+    html += '<div class="hex core" style="left:50%;top:50%"><span class="hex-icon">🌐</span><span class="hex-name">Nucleo Stazione</span><span class="hex-lv">Sempre attivo</span></div>';
     STATION_MODULES.forEach(function(mod){
       var lvl = state.station[mod.id]||0;
       var cls = stationModuleClass(mod);
