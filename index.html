@@ -43,7 +43,7 @@
   --shadow:0 18px 40px -18px rgba(0,0,0,.65);
   --radius:14px;
   --tabbar-h:56px;
-  --curbar-h:46px;
+  --topbar-h:100px;
   color-scheme: dark;
 }
 
@@ -86,60 +86,19 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .stage{
   position:relative; z-index:1; max-width:1100px; margin:0 auto;
   padding: 20px 20px 56px;
-  padding: calc(var(--tabbar-h) + 18px) max(20px, env(safe-area-inset-right)) calc(var(--curbar-h) + 22px) max(20px, env(safe-area-inset-left));
+  padding: calc(var(--topbar-h) + 18px) max(20px, env(safe-area-inset-right)) calc(var(--tabbar-h) + 22px) max(20px, env(safe-area-inset-left));
 }
 
-/* ---------- console bar ---------- */
-.console-bar{
-  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-  padding:16px 20px; margin-bottom:22px;
-  background: linear-gradient(180deg, var(--panel), var(--panel-2));
-  border:1px solid var(--line); border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-.brand{ display:flex; align-items:center; gap:10px; margin-right:auto; }
-.brand-icon{ font-size:22px; filter: drop-shadow(0 0 6px var(--accent)); }
-.brand h1{
-  font-family:'Orbitron',sans-serif; font-weight:800; font-size: clamp(18px,3vw,24px);
-  letter-spacing:.06em; margin:0; color:var(--text);
-  text-shadow: 0 0 18px var(--accent-soft);
-}
-.icon-btn{
-  width:38px; height:38px; border-radius:10px; border:1px solid var(--line);
-  background: var(--panel-3); color:var(--text-dim); font-size:16px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition: all .15s ease;
-}
-.icon-btn:hover{ color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
-.icon-btn:focus-visible, .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-
-/* ---------- section tabs (fissa in alto) ---------- */
-.tab-bar{
+/* ---------- barra valute + logo, fissi in alto ---------- */
+.topbar-fixed{
   position:fixed; top:0; left:0; right:0; z-index:40;
-  display:flex; gap:6px; flex-wrap:wrap;
   max-width:1100px; margin:0 auto; width:100%;
-  padding: calc(9px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 9px max(14px, env(safe-area-inset-left));
-  background: linear-gradient(180deg, var(--panel), var(--panel-2));
-  border-bottom:1px solid var(--line); box-shadow: var(--shadow);
 }
-.tab-btn{
-  flex:1 1 84px; display:flex; align-items:center; justify-content:center; gap:6px;
-  padding:9px 10px; border-radius:9px; border:1px solid var(--line);
-  background: var(--panel); color:var(--text-dim); cursor:pointer;
-  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; letter-spacing:.02em;
-  transition: all .15s ease; white-space:nowrap;
-}
-.tab-btn:hover{ color:var(--text); }
-.tab-btn.active{ background: linear-gradient(180deg, var(--panel-3), var(--panel-2)); color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
-.tab-panel[hidden]{ display:none; }
-
-/* ---------- barra valute fissa in basso ---------- */
 .curbar{
-  position:fixed; left:0; right:0; bottom:0; z-index:40;
   display:flex; align-items:center; gap:6px; overflow-x:auto; flex-wrap:nowrap;
-  max-width:1100px; margin:0 auto; width:100%;
-  padding: 7px max(14px, env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  padding: calc(7px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 7px max(14px, env(safe-area-inset-left));
   background: linear-gradient(180deg, var(--panel), var(--panel-2));
-  border-top:1px solid var(--line); box-shadow: 0 -8px 24px -12px rgba(0,0,0,.5);
+  border-bottom:1px solid var(--line);
   -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
 .curbar::-webkit-scrollbar{ display:none; }
@@ -155,6 +114,47 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .cur-chip.rate{ background:transparent; border-color:transparent; padding-left:2px; }
 .cur-chip.rate .val{ color:var(--accent); font-size:10.5px; }
 .cur-chip.frag .val{ color:var(--newcur); }
+
+.console-bar{
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:10px 14px;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border-bottom:1px solid var(--line); box-shadow: var(--shadow);
+}
+.brand{ display:flex; align-items:center; gap:9px; margin-right:auto; }
+.brand-icon{ font-size:18px; filter: drop-shadow(0 0 6px var(--accent)); }
+.brand h1{
+  font-family:'Orbitron',sans-serif; font-weight:800; font-size: clamp(15px,2.6vw,19px);
+  letter-spacing:.06em; margin:0; color:var(--text);
+  text-shadow: 0 0 18px var(--accent-soft);
+}
+.icon-btn{
+  width:32px; height:32px; border-radius:9px; border:1px solid var(--line);
+  background: var(--panel-3); color:var(--text-dim); font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition: all .15s ease;
+}
+.icon-btn:hover{ color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.icon-btn:focus-visible, .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* ---------- section tabs, fisse in basso ---------- */
+.tab-bar{
+  position:fixed; bottom:0; left:0; right:0; z-index:40;
+  display:flex; gap:6px; flex-wrap:wrap;
+  max-width:1100px; margin:0 auto; width:100%;
+  padding: 9px max(14px, env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border-top:1px solid var(--line); box-shadow: 0 -8px 24px -12px rgba(0,0,0,.5);
+}
+.tab-btn{
+  flex:1 1 84px; display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:9px 10px; border-radius:9px; border:1px solid var(--line);
+  background: var(--panel); color:var(--text-dim); cursor:pointer;
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; letter-spacing:.02em;
+  transition: all .15s ease; white-space:nowrap;
+}
+.tab-btn:hover{ color:var(--text); }
+.tab-btn.active{ background: linear-gradient(180deg, var(--panel-3), var(--panel-2)); color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.tab-panel[hidden]{ display:none; }
 
 /* ---------- modules grid ---------- */
 .modules-grid{
@@ -434,7 +434,12 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 
 
 <div class="starfield" aria-hidden="true"></div>
-<div class="stage">
+<div class="topbar-fixed" id="topbar-fixed">
+  <div class="curbar" aria-label="Valute">
+    <div class="cur-chip credits"><span class="ic">💰</span><span class="val" id="credits-value">0</span></div>
+    <div class="cur-chip rate"><span class="val" id="rate-value">0 cr/s</span></div>
+    <div class="cur-chip frag"><span class="ic">✦</span><span class="val" id="fragments-value">0</span></div>
+  </div>
   <header class="console-bar">
     <div class="brand">
       <span class="brand-icon" aria-hidden="true">⛏</span>
@@ -442,20 +447,17 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     </div>
     <button class="icon-btn" id="reset-btn" title="Reimposta partita" aria-label="Reimposta partita">⟲</button>
   </header>
+</div>
 
-  <nav class="tab-bar" role="tablist" aria-label="Sezioni" id="tab-bar">
-    <button class="tab-btn active" id="tab-btn-mining" data-tab="mining" role="tab" aria-selected="true">⛏ Miniera</button>
-    <button class="tab-btn" id="tab-btn-research" data-tab="research" role="tab" aria-selected="false">🧪 Laboratorio</button>
-    <button class="tab-btn" id="tab-btn-bonus" data-tab="bonus" role="tab" aria-selected="false">🎁 Bonus</button>
-    <button class="tab-btn" id="tab-btn-station" data-tab="station" role="tab" aria-selected="false">🏗️ Stazione</button>
-    <button class="tab-btn" id="tab-btn-fleet" data-tab="fleet" role="tab" aria-selected="false">🚀 Flotta</button>
-  </nav>
+<nav class="tab-bar" role="tablist" aria-label="Sezioni" id="tab-bar">
+  <button class="tab-btn active" id="tab-btn-mining" data-tab="mining" role="tab" aria-selected="true">⛏ Miniera</button>
+  <button class="tab-btn" id="tab-btn-research" data-tab="research" role="tab" aria-selected="false">🧪 Laboratorio</button>
+  <button class="tab-btn" id="tab-btn-bonus" data-tab="bonus" role="tab" aria-selected="false">🎁 Bonus</button>
+  <button class="tab-btn" id="tab-btn-station" data-tab="station" role="tab" aria-selected="false">🏗️ Stazione</button>
+  <button class="tab-btn" id="tab-btn-fleet" data-tab="fleet" role="tab" aria-selected="false">🚀 Flotta</button>
+</nav>
 
-  <footer class="curbar" id="curbar" aria-label="Valute">
-    <div class="cur-chip credits"><span class="ic">💰</span><span class="val" id="credits-value">0</span></div>
-    <div class="cur-chip rate"><span class="val" id="rate-value">0 cr/s</span></div>
-    <div class="cur-chip frag"><span class="ic">✦</span><span class="val" id="fragments-value">0</span></div>
-  </footer>
+<div class="stage">
 
   <main class="tab-panel" id="panel-mining">
     <div class="modules-grid" id="modules-grid" aria-label="Moduli di estrazione"></div>
@@ -1708,10 +1710,10 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 
   // ---------------- barre fisse: misura altezza reale e aggiorna il padding dello stage ----------------
   var tabBarEl = document.getElementById("tab-bar");
-  var curbarEl = document.getElementById("curbar");
+  var topbarFixedEl = document.getElementById("topbar-fixed");
   function updateFixedBarOffsets(){
     if(tabBarEl){ document.documentElement.style.setProperty("--tabbar-h", tabBarEl.offsetHeight+"px"); }
-    if(curbarEl){ document.documentElement.style.setProperty("--curbar-h", curbarEl.offsetHeight+"px"); }
+    if(topbarFixedEl){ document.documentElement.style.setProperty("--topbar-h", topbarFixedEl.offsetHeight+"px"); }
   }
 
   // ---------------- boot ----------------
