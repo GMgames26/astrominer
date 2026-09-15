@@ -2,18 +2,12 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#05060a">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Astrominer">
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="icon" href="./icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#05060f">
 <title>Astrominer</title>
 <style>
-
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 
 :root{
@@ -397,6 +391,28 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .upg:disabled{ opacity:.4; cursor:not-allowed; }
 .upg-cost{ color:var(--newcur); }
 
+/* ---------- mercato galattico ---------- */
+.market-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap:16px; }
+.market-sell-all{ grid-column:1/-1; margin-bottom:2px; background: var(--newcur-soft); border-color:var(--newcur); color:var(--newcur); font-size:14px; padding:10px 12px; justify-content:center; }
+.market-row{
+  position:relative; background: linear-gradient(165deg, var(--panel), var(--panel-2));
+  border:1px solid var(--line); border-radius: var(--radius); padding:14px; box-shadow: var(--shadow);
+  border-top:3px solid var(--newcur);
+}
+.market-row-head{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.market-name{ font-weight:700; font-size:14.5px; flex:1; font-family:'Rajdhani',sans-serif; }
+.market-rate{
+  font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; padding:3px 8px;
+  border-radius:12px; border:1px solid var(--line); color:var(--text-dim);
+}
+.market-rate.good{ color:var(--good); border-color:var(--good); background:var(--good-soft); }
+.market-rate.bad{ color:var(--danger); border-color:var(--danger); background:rgba(248,113,113,.14); }
+.market-row-body{
+  display:flex; justify-content:space-between; gap:8px; font-size:12px; color:var(--text-dim);
+  margin-bottom:10px; font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums;
+}
+.market-row .btn-sell{ width:100%; flex:none; justify-content:center; }
+
 /* ---------- modal ---------- */
 .modal-overlay{
   position:fixed; inset:0; z-index:60; background: rgba(4,5,14,.72); backdrop-filter: blur(3px);
@@ -429,11 +445,9 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   .console-bar{ padding:14px; }
   .cur-chip{ padding:5px 8px; }
 }
-
 </style>
 </head>
 <body>
-
 
 <div class="starfield" aria-hidden="true"></div>
 <div class="topbar-fixed" id="topbar-fixed">
@@ -450,6 +464,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   <button class="tab-btn" id="tab-btn-bonus" data-tab="bonus" role="tab" aria-selected="false">🎁 Bonus</button>
   <button class="tab-btn" id="tab-btn-station" data-tab="station" role="tab" aria-selected="false">🏗️ Stazione</button>
   <button class="tab-btn" id="tab-btn-fleet" data-tab="fleet" role="tab" aria-selected="false">🚀 Flotta</button>
+  <button class="tab-btn" id="tab-btn-market" data-tab="market" role="tab" aria-selected="false">💱 Mercato</button>
 </nav>
 
 <div class="stage">
@@ -497,6 +512,14 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     <div class="fleet-grid" id="fleet-grid"></div>
   </section>
 
+  <section class="tab-panel" id="panel-market" hidden>
+    <div class="research-intro">
+      <p>Vendi le scorte in eccesso a un tasso di cambio che oscilla nel tempo: aspetta un rialzo per guadagnare di più, o svuota subito il magazzino se ti serve liquidità immediata.</p>
+      <span class="fleet-hint" id="market-countdown"></span>
+    </div>
+    <div class="market-grid" id="market-grid"></div>
+  </section>
+
   <p class="footnote">Progressi salvati automaticamente in questo browser · continuano anche mentre non giochi</p>
 </div>
 
@@ -537,6 +560,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   var OFFLINE_CAP_S = 8*3600;      // massimo 8 ore di progressi offline calcolati
   var WELCOME_THRESHOLD_S = 20;    // mostra il rapporto solo se assente per piu' di 20s
   var OFFLINE_EFFICIENCY_BASE = 0.1; // efficienza produttiva offline di base: 10% del tempo reale trascorso
+  var MAX_FOREGROUND_DT_S = 2;     // oltre questa soglia tra due tick, il tab era in background/sospeso dal sistema
 
   var PREFIXES = ["Ferro","Rame","Argento","Oro","Platino","Titanio","Uranio","Osmio","Iridio","Palladio","Cobalto","Renio","Afnio","Zirconio","Vanadio","Tungsteno","Cromo","Niobio"];
   var SUFFIXES = ["Spaziale","Cosmico","Stellare","Nebulare","Galattico","Asteroidale","Quantico","Astrale","Siderale","Interdimensionale","Vuoto","Pulsar","Solare","Cristallino"];
@@ -714,15 +738,47 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
         { credits:120000, cost:[{mineralIndex:5, amount:150},{mineralIndex:6, amount:95}], effects:[{type:"upgradeDiscount", value:0.05}], desc:"-5% aggiuntivo sul costo dei potenziamenti." },
         { credits:760000, cost:[{mineralIndex:7, amount:210},{mineralIndex:8, amount:150}], effects:[{type:"upgradeDiscount", value:0.06}], desc:"-6% aggiuntivo sul costo dei potenziamenti." }
       ]
+    },
+    // Modulo finale: si sblocca solo quando TUTTI gli altri 5 moduli sono al livello massimo.
+    // Bonus inventato: resa di estrazione (mai data da un modulo stazione finora) + un piccolo
+    // extra di efficienza offline all'ultimo livello, come coronamento dell'intera Stazione.
+    { id:"anomalia", name:"Anomalia Stellare", icon:"🌠", pos:{left:"21.7%", top:"32.3%"}, line:{x2:113, y2:155},
+      requiresAllMaxed: true,
+      levels:[
+        { credits:1500000, cost:[{mineralIndex:8, amount:260},{mineralIndex:9, amount:200}], effects:[{type:"yield", value:3}], desc:"+3 resa base su tutti i minerali." },
+        { credits:3200000, cost:[{mineralIndex:9, amount:320}], effects:[{type:"yield", value:4}], desc:"+4 aggiuntivo di resa base su tutti i minerali." },
+        { credits:6000000, cost:[{mineralIndex:9, amount:420}], effects:[{type:"yield", value:5},{type:"offlineMult", value:0.10}], desc:"+5 aggiuntivo di resa base e +10% efficienza produttiva offline." }
+      ]
     }
   ];
 
+  // Aumento drastico delle quantità di minerale richieste da Laboratorio, Bonus e Stazione:
+  // a fine gioco i crediti per i potenziamenti costano relativamente poco, quindi le scorte
+  // di minerale si accumulano molto più in fretta di quanto si riescano a spendere.
+  var MINERAL_COST_MULT = 3;
+  (function scaleMineralCostsUp(){
+    RESEARCH_COSTS.forEach(function(tier){
+      tier.forEach(function(c){ c.amount = Math.round(c.amount*MINERAL_COST_MULT); });
+    });
+    BONUS_ITEMS.forEach(function(b){
+      b.cost.forEach(function(c){ c.amount = Math.round(c.amount*MINERAL_COST_MULT); });
+    });
+    STATION_MODULES.forEach(function(mod){
+      mod.levels.forEach(function(lvl){
+        lvl.cost.forEach(function(c){ c.amount = Math.round(c.amount*MINERAL_COST_MULT); });
+      });
+    });
+  })();
+
   // Flotta di Spedizioni: le navi partono in missione su una rotta a tempo e vanno richiamate
   // manualmente al ritorno per incassare il bottino (minerale più avanzato già sbloccato).
+  // Durate ridotte rispetto a prima (a parità di ricompensa) cosi' il rendimento orario delle
+  // missioni è nettamente più alto, e ora ogni rientro paga anche in crediti oltre che minerale
+  // e frammenti — la Flotta (sbloccata solo a fine gioco) diventa una fonte di reddito rilevante.
   var ROUTES = [
-    { key:"breve", name:"Rotta Breve", durationS:5*60, baseAmount:75, fragmentBase:8 },
-    { key:"media", name:"Rotta Media", durationS:30*60, baseAmount:400, fragmentBase:35 },
-    { key:"lunga", name:"Rotta Lunga", durationS:3*3600, baseAmount:2600, fragmentBase:180 }
+    { key:"breve", name:"Rotta Breve", durationS:3*60, baseAmount:75, fragmentBase:8, creditBase:5000 },
+    { key:"media", name:"Rotta Media", durationS:15*60, baseAmount:400, fragmentBase:35, creditBase:40000 },
+    { key:"lunga", name:"Rotta Lunga", durationS:1.5*3600, baseAmount:2600, fragmentBase:180, creditBase:300000 }
   ];
   var SHIP_UPGRADE_MAX = 5;
   var SHIP_UPGRADE_LABELS = { speed:"⚡ Vel.", capacity:"📦 Stiva", luck:"🍀 Fortuna" };
@@ -742,6 +798,10 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     var mult = (1+ship.luckLevel*0.15);
     return Math.round(route.fragmentBase*mult);
   }
+  function shipCreditsAmount(route, ship){
+    var mult = (1+ship.capacityLevel*0.35)*(1+ship.luckLevel*0.15);
+    return Math.round(route.creditBase*mult);
+  }
   function routeLabel(route){
     return route.durationS<3600 ? Math.round(route.durationS/60)+" min" : (route.durationS/3600)+" h";
   }
@@ -751,7 +811,8 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     if(m>0) return m+"min "+sec+"s";
     return sec+"s";
   }
-  function totalShipSlots(){ return 1+Math.round(computeMods().fleetSlots||0); }
+  // niente più nave gratuita di base: la prima nave arriva solo acquistando l'Hangar Navale in Stazione.
+  function totalShipSlots(){ return Math.round(computeMods().fleetSlots||0); }
   function syncFleetSlots(){
     var total = totalShipSlots();
     while(state.fleet.ships.length < total){
@@ -783,13 +844,26 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       var lvl = state.station[mod.id]||0;
       for(var i=0;i<lvl;i++){ applyEffectsToMods(mods, mod.levels[i].effects); }
     });
+    // piccolo bonus passivo solo per possedere navi (non serve tenerle in missione attiva):
+    // incentiva costruire/potenziare l'Hangar Navale anche a chi non vuole gestire spedizioni.
+    var shipCount = (state.fleet && state.fleet.ships) ? state.fleet.ships.length : 0;
+    if(shipCount>0) mods.valueMult += 0.02*shipCount;
     return mods;
+  }
+
+  // vero solo quando tutte e 30 le abilità del Laboratorio sono state acquisite:
+  // è il cancello che sblocca la Stazione Spaziale (e, a cascata, la Flotta).
+  function allResearchDone(){
+    return RESEARCH_TREE.every(function(n){ return !!state.research[n.id]; });
   }
 
   function effTime(cfg, m, mods){ return Math.max(0.35, cfg.baseTime*Math.pow(0.9, m.speedLevel)*mods.speedMult); }
   function effYield(cfg, m, mods){ return 1+m.yieldLevel+mods.yieldBonus; }
   function sellValue(cfg, mods){ return cfg.baseValue*mods.valueMult; }
-  function upgradeCost(base, level, mult){ return Math.round(base*Math.pow(1.32, level)*mult); }
+  function upgradeCost(base, level, mult){ return Math.round(base*Math.pow(1.4, level)*mult); }
+  // costo aggiuntivo in minerale (dello stesso minerale che si sta potenziando) per i potenziamenti
+  // Velocità/Resa: cresce rapidamente col livello per assorbire le grandi scorte accumulate a fine gioco.
+  function upgradeMineralCost(level){ return Math.round(10*Math.pow(1.6, level)); }
 
   function fmt(n){
     if(n<0) n=0;
@@ -810,8 +884,9 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       minerals: [ { stock:0, timeLeft: mineralConfig(0).baseTime, speedLevel:0, yieldLevel:0, autoSell:false, autoUnlocked:false } ],
       research: {},
       bonuses: {},
-      station: { hangar:0, raffineria:0, deposito:0, torre:0, centroRicerca:0 },
-      fleet: { ships: [ { speedLevel:0, capacityLevel:0, luckLevel:0, routeKey:null, endsAt:null } ] }
+      station: { hangar:0, raffineria:0, deposito:0, torre:0, centroRicerca:0, anomalia:0 },
+      fleet: { ships: [] },
+      market: { multipliers: [], lastUpdate: Date.now() }
     };
   }
 
@@ -833,12 +908,16 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     if(!state.research || typeof state.research !== "object"){ state.research = {}; }
     if(!state.bonuses || typeof state.bonuses !== "object"){ state.bonuses = {}; }
     if(!state.station || typeof state.station !== "object"){
-      state.station = { hangar:0, raffineria:0, deposito:0, torre:0, centroRicerca:0 };
+      state.station = { hangar:0, raffineria:0, deposito:0, torre:0, centroRicerca:0, anomalia:0 };
     }
+    if(typeof state.station.anomalia !== "number"){ state.station.anomalia = 0; }
     if(!state.fleet || !Array.isArray(state.fleet.ships)){
-      state.fleet = { ships: [ { speedLevel:0, capacityLevel:0, luckLevel:0, routeKey:null, endsAt:null } ] };
+      state.fleet = { ships: [] };
     }
     if(typeof state.fragments !== "number"){ state.fragments = 0; }
+    if(!state.market || typeof state.market !== "object" || !Array.isArray(state.market.multipliers)){
+      state.market = { multipliers: [], lastUpdate: Date.now() };
+    }
     state.minerals.forEach(function(m){
       if(typeof m.autoUnlocked !== "boolean"){ m.autoUnlocked = !!m.autoSell; }
     });
@@ -868,10 +947,12 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     return {stock:gained, credits:0};
   }
 
-  function applyOfflineProgress(){
-    var elapsed = (Date.now()-state.lastSave)/1000;
-    if(elapsed < WELCOME_THRESHOLD_S) return null;
-    elapsed = Math.min(elapsed, OFFLINE_CAP_S);
+  // simula 'elapsedS' secondi di tempo reale trascorso applicando l'efficienza offline:
+  // usata sia per il rapporto "bentornato" all'avvio, sia per i buchi di tempo rilevati
+  // a gioco aperto (tab in background/sospeso dal sistema), cosi' in entrambi i casi
+  // il giocatore non puo' ottenere produzione al 100% semplicemente lasciando l'app aperta.
+  function simulateElapsedGap(elapsedS){
+    var elapsed = Math.min(elapsedS, OFFLINE_CAP_S);
     var mods = computeMods();
     var efficiency = Math.min(1, OFFLINE_EFFICIENCY_BASE + mods.offlineBonus);
     var simElapsed = elapsed * efficiency;
@@ -883,7 +964,13 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       if(res.stock>0) minedTotals[cfg.name] = (minedTotals[cfg.name]||0) + res.stock;
     });
     var creditsGained = state.credits - creditsBefore;
-    return { elapsed: elapsed, creditsGained: creditsGained, minedTotals: minedTotals, efficiency: efficiency };
+    return { elapsed: elapsedS, creditsGained: creditsGained, minedTotals: minedTotals, efficiency: efficiency };
+  }
+
+  function applyOfflineProgress(){
+    var elapsed = (Date.now()-state.lastSave)/1000;
+    if(elapsed < WELCOME_THRESHOLD_S) return null;
+    return simulateElapsedGap(elapsed);
   }
 
   // ---------------- rendering ----------------
@@ -987,16 +1074,18 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       if(sellBtn) sellBtn.disabled = m.stock<=0;
 
       var speedCost = upgradeCost(cfg.speedBaseCost, m.speedLevel, mods.upgradeMult);
+      var speedCostOre = upgradeMineralCost(m.speedLevel);
       var speedEl = document.getElementById("speed-cost-"+i);
-      if(speedEl) speedEl.textContent = fmt(speedCost)+" cr";
+      if(speedEl) speedEl.textContent = fmt(speedCost)+" cr + "+fmtInt(speedCostOre)+"x";
       var speedBtn = grid.querySelector('.btn-upgrade[data-action="speed"][data-i="'+i+'"]');
-      if(speedBtn) speedBtn.disabled = state.credits < speedCost;
+      if(speedBtn) speedBtn.disabled = state.credits < speedCost || m.stock < speedCostOre;
 
       var yieldCost = upgradeCost(cfg.yieldBaseCost, m.yieldLevel, mods.upgradeMult);
+      var yieldCostOre = upgradeMineralCost(m.yieldLevel);
       var yieldEl = document.getElementById("yield-cost-"+i);
-      if(yieldEl) yieldEl.textContent = fmt(yieldCost)+" cr";
+      if(yieldEl) yieldEl.textContent = fmt(yieldCost)+" cr + "+fmtInt(yieldCostOre)+"x";
       var yieldBtn = grid.querySelector('.btn-upgrade[data-action="yield"][data-i="'+i+'"]');
-      if(yieldBtn) yieldBtn.disabled = state.credits < yieldCost;
+      if(yieldBtn) yieldBtn.disabled = state.credits < yieldCost || m.stock < yieldCostOre;
 
       if(!m.autoUnlocked){
         var autoEl = document.getElementById("auto-cost-"+i);
@@ -1019,6 +1108,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     updateBonusAfford();
     updateStationAfford();
     updateFleetTimers();
+    updateMarketDisplay();
   }
 
   // ---------------- research lab ----------------
@@ -1165,6 +1255,8 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     state.research[nodeId] = true;
     renderResearch();
     buildModules();
+    renderStation(); // la 30ª abilità sblocca la Stazione: aggiorna subito il pannello
+    renderFleet();   // il messaggio di blocco della Flotta dipende anche da questo stato
     saveGame();
     if(openAbilityId===nodeId){ abilityModalBody.innerHTML = abilityModalHTML(node); }
   }
@@ -1265,7 +1357,14 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
   var stationModalBody = document.getElementById("station-modal-body");
   var openStationId = null;
 
+  function allOtherStationModulesMaxed(modId){
+    return STATION_MODULES.every(function(m){
+      if(m.id===modId) return true;
+      return (state.station[m.id]||0) >= m.levels.length;
+    });
+  }
   function stationModulePrereqOk(mod){
+    if(mod.requiresAllMaxed) return allOtherStationModulesMaxed(mod.id);
     if(!mod.requires) return true;
     return (state.station[mod.requires.module]||0) >= mod.requires.level;
   }
@@ -1290,7 +1389,19 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     return "buildable";
   }
 
+  function stationLockedHTML(){
+    var purchasedCount = RESEARCH_TREE.filter(function(n){ return state.research[n.id]; }).length;
+    return '<div class="lock-body" style="text-align:center;padding:34px 10px;">'+
+      '<p class="lock-hint" style="font-size:14px;color:var(--text-dim);">🔒 Stazione Spaziale bloccata</p>'+
+      '<p class="lock-hint">Completa tutte le abilità del Laboratorio per sbloccarla — attualmente '+purchasedCount+'/'+RESEARCH_TOTAL+'.</p>'+
+    '</div>';
+  }
+
   function renderStation(){
+    if(!allResearchDone()){
+      stationTreeEl.innerHTML = stationLockedHTML();
+      return;
+    }
     var html = '<div class="hexmap-wrap"><div class="hexmap">';
     html += '<div class="core-ring"></div>';
     html += '<svg viewBox="0 0 520 480" preserveAspectRatio="none">';
@@ -1308,7 +1419,6 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
         '<span class="hex-icon">'+mod.icon+'</span><span class="hex-name">'+mod.name+'</span><span class="hex-lv">'+lvText+'</span>'+
       '</div>';
     });
-    html += '<div class="hex mystery" style="left:21.7%;top:32.3%" data-station="mystery"><span class="hex-icon">❔</span><span class="hex-name">Modulo sconosciuto</span><span class="hex-lv">Da scoprire</span></div>';
     html += '</div></div>';
     stationTreeEl.innerHTML = html;
     if(openStationId){ refreshStationModal(); }
@@ -1324,6 +1434,10 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
         '<div class="modal-actions"><button class="btn" id="station-close">Chiudi</button></div>';
     }
     if(!stationModulePrereqOk(mod)){
+      if(mod.requiresAllMaxed){
+        return head+'<p class="rnode-status">🔒 Richiede che tutti gli altri moduli della Stazione siano al livello massimo.</p>'+
+          '<div class="modal-actions"><button class="btn" id="station-close">Chiudi</button></div>';
+      }
       var reqMod = STATION_MODULES.filter(function(m){ return m.id===mod.requires.module; })[0];
       return head+'<p class="rnode-status">🔒 Richiede '+(reqMod?reqMod.name:mod.requires.module)+' a livello '+mod.requires.level+'.</p>'+
         '<div class="modal-actions"><button class="btn" id="station-close">Chiudi</button></div>';
@@ -1352,14 +1466,6 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     if(!mod) return;
     openStationId = id;
     stationModalBody.innerHTML = stationModalHTML(mod);
-    stationOverlay.hidden = false;
-  }
-  function showMysteryModal(){
-    openStationId = null;
-    stationModalBody.innerHTML =
-      '<h2 style="color:var(--text-faint)">❔ Modulo sconosciuto</h2>'+
-      '<p style="color:var(--text-dim);font-size:13px;margin:0 0 14px;">I sensori non hanno ancora identificato questo settore della stazione. Tornerà utile più avanti.</p>'+
-      '<div class="modal-actions"><button class="btn" id="station-close">Chiudi</button></div>';
     stationOverlay.hidden = false;
   }
   function closeStationModal(){ openStationId = null; stationOverlay.hidden = true; }
@@ -1396,6 +1502,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     syncFleetSlots();
     renderStation();
     renderFleet();
+    renderMarket();
     saveGame();
     if(openStationId===id){ stationModalBody.innerHTML = stationModalHTML(mod); }
   }
@@ -1405,7 +1512,6 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     if(!hexEl) return;
     var key = hexEl.getAttribute("data-station");
     if(!key) return;
-    if(key==="mystery"){ showMysteryModal(); return; }
     showStationModal(key);
   });
   stationOverlay.addEventListener("click", function(ev){
@@ -1437,7 +1543,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
         '</button>';
     } else {
       body = (ship.lastReward ? (
-          '<p class="ship-reward-last">✅ Ultimo rientro: +'+fmtInt(ship.lastReward.amount)+' '+ship.lastReward.name+'</p>'+
+          '<p class="ship-reward-last">✅ Ultimo rientro: +'+fmtInt(ship.lastReward.amount)+' '+ship.lastReward.name+' · 💰 +'+fmt(ship.lastReward.credits||0)+' cr</p>'+
           '<p class="ship-reward-last cur">'+FRAGMENT_ICON+' +'+fmtInt(ship.lastReward.fragments||0)+' '+FRAGMENT_NAME+'</p>'
         ) : '')+
         '<p class="ship-reward-hint">Ricompensa in '+rewardName+' — cambia con rotta e potenziamenti.</p>'+
@@ -1463,8 +1569,26 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     '</div>';
   }
 
+  function fleetLockedHTML(){
+    if(!allResearchDone()){
+      return '<div class="lock-body" style="text-align:center;padding:34px 10px;">'+
+        '<p class="lock-hint" style="font-size:14px;color:var(--text-dim);">🔒 Flotta di Spedizioni bloccata</p>'+
+        '<p class="lock-hint">Completa tutte le abilità del Laboratorio per sbloccare la Stazione Spaziale, poi costruisci l\'Hangar Navale per ottenere la tua prima nave.</p>'+
+      '</div>';
+    }
+    return '<div class="lock-body" style="text-align:center;padding:34px 10px;">'+
+      '<p class="lock-hint" style="font-size:14px;color:var(--text-dim);">🔒 Flotta di Spedizioni bloccata</p>'+
+      '<p class="lock-hint">Costruisci l\'Hangar Navale nella Stazione Spaziale per ottenere la tua prima nave.</p>'+
+    '</div>';
+  }
+
   function renderFleet(){
     syncFleetSlots();
+    if(state.fleet.ships.length===0){
+      fleetGridEl.innerHTML = fleetLockedHTML();
+      if(fleetSlotHintEl) fleetSlotHintEl.textContent = "";
+      return;
+    }
     fleetGridEl.innerHTML = state.fleet.ships.map(shipCardHTML).join('');
     updateFleetTimers();
     if(fleetSlotHintEl){
@@ -1494,7 +1618,9 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     state.minerals[mineralIdx].stock += amount;
     var fragAmount = shipFragmentAmount(route, ship);
     state.fragments += fragAmount;
-    ship.lastReward = { name: mineralConfig(mineralIdx).name, amount: amount, fragments: fragAmount };
+    var creditsAmount = shipCreditsAmount(route, ship);
+    state.credits += creditsAmount; state.totalEarned += creditsAmount;
+    ship.lastReward = { name: mineralConfig(mineralIdx).name, amount: amount, fragments: fragAmount, credits: creditsAmount };
     ship.routeKey = null; ship.endsAt = null;
     renderFleet();
     saveGame();
@@ -1571,39 +1697,217 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     }
   });
 
+  // ---------------- mercato galattico ----------------
+  // Sezione sbloccata solo quando il modulo Stazione "Anomalia Stellare" è al livello massimo.
+  // I minerali si vendono qui a un tasso di cambio che oscilla nel tempo (random walk, aggiornato
+  // ogni MARKET_UPDATE_INTERVAL_S secondi anche mentre si è lontani dal gioco): un modo aggiuntivo,
+  // e potenzialmente più remunerativo del "Vendi" normale, per smaltire le scorte in eccesso.
+  var marketGridEl = document.getElementById("market-grid");
+  var marketCountdownEl = document.getElementById("market-countdown");
+  var MARKET_UPDATE_INTERVAL_S = 45;
+  var MARKET_MULT_MIN = 0.5;
+  var MARKET_MULT_MAX = 2.0;
+  var MARKET_STEP = 0.35;
+
+  function anomaliaModule(){ return STATION_MODULES.filter(function(m){ return m.id==="anomalia"; })[0]; }
+  function marketUnlocked(){ return (state.station.anomalia||0) >= anomaliaModule().levels.length; }
+
+  function ensureMarketState(){
+    if(!state.market || typeof state.market !== "object" || !Array.isArray(state.market.multipliers)){
+      state.market = { multipliers: [], lastUpdate: Date.now() };
+    }
+    while(state.market.multipliers.length < state.minerals.length){
+      state.market.multipliers.push(1 + (Math.random()*0.4-0.2));
+    }
+  }
+
+  function randomWalkMultiplier(m){
+    var next = m + (Math.random()*2-1)*MARKET_STEP;
+    if(next < MARKET_MULT_MIN) next = MARKET_MULT_MIN;
+    if(next > MARKET_MULT_MAX) next = MARKET_MULT_MAX;
+    return next;
+  }
+
+  // matura gli aggiornamenti di tasso dovuti al tempo reale trascorso (anche offline/in
+  // background, dato che si basa su Date.now() come il resto del gioco): ritorna true se
+  // i tassi sono effettivamente cambiati, cosi' il chiamante sa quando ridisegnare la lista.
+  function updateMarketRates(){
+    ensureMarketState();
+    var elapsed = (Date.now()-state.market.lastUpdate)/1000;
+    if(elapsed < MARKET_UPDATE_INTERVAL_S) return false;
+    var steps = Math.min(20, Math.floor(elapsed/MARKET_UPDATE_INTERVAL_S));
+    for(var s=0; s<steps; s++){
+      state.market.multipliers = state.market.multipliers.map(randomWalkMultiplier);
+    }
+    state.market.lastUpdate += steps*MARKET_UPDATE_INTERVAL_S*1000;
+    return true;
+  }
+
+  function marketRateClass(mult){
+    if(mult>=1.3) return "good";
+    if(mult<=0.75) return "bad";
+    return "";
+  }
+
+  function marketPriceFor(i, mods){
+    var cfg = mineralConfig(i);
+    var mult = state.market.multipliers[i]===undefined ? 1 : state.market.multipliers[i];
+    return sellValue(cfg, mods)*mult;
+  }
+
+  function marketLockedHTML(){
+    return '<div class="lock-body" style="text-align:center;padding:34px 10px;">'+
+      '<p class="lock-hint" style="font-size:14px;color:var(--text-dim);">🔒 Mercato Galattico bloccato</p>'+
+      '<p class="lock-hint">Porta il modulo Anomalia Stellare della Stazione al livello massimo per sbloccarlo.</p>'+
+    '</div>';
+  }
+
+  function marketRowHTML(i, mods){
+    var cfg = mineralConfig(i);
+    var m = state.minerals[i];
+    var mult = state.market.multipliers[i]===undefined ? 1 : state.market.multipliers[i];
+    var price = marketPriceFor(i, mods);
+    return (
+      '<div class="market-row" data-i="'+i+'">'+
+        '<div class="market-row-head">'+
+          '<span class="ore-chip" style="background:hsl('+cfg.hue+' 70% 55%);width:10px;height:10px;box-shadow:none;"></span>'+
+          '<span class="market-name">'+cfg.name+'</span>'+
+          '<span class="market-rate '+marketRateClass(mult)+'" id="market-rate-'+i+'">'+Math.round(mult*100)+'%</span>'+
+        '</div>'+
+        '<div class="market-row-body">'+
+          '<span>Scorta: <span id="market-stock-'+i+'">'+fmtInt(m.stock)+'</span></span>'+
+          '<span id="market-price-'+i+'">'+fmt(price)+' cr/u</span>'+
+        '</div>'+
+        '<button class="btn btn-sell" data-action="market-sell" data-i="'+i+'" id="market-sell-'+i+'" '+(m.stock<=0?'disabled':'')+'>'+
+          'Vendi al mercato <span class="btn-sub" id="market-total-'+i+'">('+fmt(m.stock*price)+' cr)</span>'+
+        '</button>'+
+      '</div>'
+    );
+  }
+
+  function renderMarket(){
+    if(!marketUnlocked()){
+      marketGridEl.innerHTML = marketLockedHTML();
+      if(marketCountdownEl) marketCountdownEl.textContent = "";
+      return;
+    }
+    ensureMarketState();
+    var mods = computeMods();
+    var totalValue = 0;
+    state.minerals.forEach(function(m,i){ totalValue += m.stock*marketPriceFor(i, mods); });
+    var html = '<button class="btn market-sell-all" data-action="market-sell-all" id="market-sell-all-btn" '+(totalValue<=0?'disabled':'')+'>'+
+      '💱 Vendi tutta la scorta al mercato <span class="btn-sub" id="market-total-all">('+fmt(totalValue)+' cr)</span>'+
+    '</button>';
+    for(var i=0;i<state.minerals.length;i++){ html += marketRowHTML(i, mods); }
+    marketGridEl.innerHTML = html;
+    updateMarketCountdown();
+  }
+
+  function updateMarketCountdown(){
+    if(!marketCountdownEl || !marketUnlocked()) return;
+    var elapsed = (Date.now()-state.market.lastUpdate)/1000;
+    var remaining = Math.max(0, Math.ceil(MARKET_UPDATE_INTERVAL_S-elapsed));
+    marketCountdownEl.textContent = "Prossimo aggiornamento tassi tra "+remaining+"s";
+  }
+
+  // aggiornamento leggero ad ogni tick: ricalcola i tassi solo se e' maturato l'intervallo
+  // (nel qual caso ridisegna tutta la lista) altrimenti aggiorna solo scorte/countdown/importi.
+  function updateMarketDisplay(){
+    if(!marketUnlocked()) return;
+    ensureMarketState();
+    if(updateMarketRates()){
+      renderMarket();
+      return;
+    }
+    updateMarketCountdown();
+    var mods = computeMods();
+    state.minerals.forEach(function(m,i){
+      var btn = document.getElementById("market-sell-"+i);
+      if(btn) btn.disabled = m.stock<=0;
+      var stockEl = document.getElementById("market-stock-"+i);
+      if(stockEl) stockEl.textContent = fmtInt(m.stock);
+      var totalEl = document.getElementById("market-total-"+i);
+      if(totalEl) totalEl.textContent = "("+fmt(m.stock*marketPriceFor(i, mods))+" cr)";
+    });
+  }
+
+  function sellAtMarket(i){
+    if(!marketUnlocked()) return;
+    var m = state.minerals[i];
+    if(!m || m.stock<=0) return;
+    ensureMarketState();
+    var mods = computeMods();
+    var gain = m.stock*marketPriceFor(i, mods);
+    state.credits += gain; state.totalEarned += gain; m.stock = 0;
+    renderMarket();
+    updateDOM();
+    saveGame();
+  }
+
+  function sellAllAtMarket(){
+    if(!marketUnlocked()) return;
+    ensureMarketState();
+    var mods = computeMods();
+    var total = 0;
+    state.minerals.forEach(function(m,i){
+      if(m.stock<=0) return;
+      total += m.stock*marketPriceFor(i, mods);
+      m.stock = 0;
+    });
+    if(total<=0) return;
+    state.credits += total; state.totalEarned += total;
+    renderMarket();
+    updateDOM();
+    saveGame();
+  }
+
+  marketGridEl.addEventListener("click", function(ev){
+    var btn = ev.target.closest("button[data-action]");
+    if(!btn || btn.disabled) return;
+    var action = btn.getAttribute("data-action");
+    if(action==="market-sell"){ sellAtMarket(parseInt(btn.getAttribute("data-i"),10)); }
+    else if(action==="market-sell-all"){ sellAllAtMarket(); }
+  });
+
   // ---------------- tabs ----------------
   var tabBtnMining = document.getElementById("tab-btn-mining");
   var tabBtnResearch = document.getElementById("tab-btn-research");
   var tabBtnBonus = document.getElementById("tab-btn-bonus");
   var tabBtnStation = document.getElementById("tab-btn-station");
   var tabBtnFleet = document.getElementById("tab-btn-fleet");
+  var tabBtnMarket = document.getElementById("tab-btn-market");
   var panelMining = document.getElementById("panel-mining");
   var panelResearch = document.getElementById("panel-research");
   var panelBonus = document.getElementById("panel-bonus");
   var panelStation = document.getElementById("panel-station");
   var panelFleet = document.getElementById("panel-fleet");
+  var panelMarket = document.getElementById("panel-market");
   function selectTab(tab){
     panelMining.hidden = tab!=="mining";
     panelResearch.hidden = tab!=="research";
     panelBonus.hidden = tab!=="bonus";
     panelStation.hidden = tab!=="station";
     panelFleet.hidden = tab!=="fleet";
+    panelMarket.hidden = tab!=="market";
     tabBtnMining.classList.toggle("active", tab==="mining");
     tabBtnResearch.classList.toggle("active", tab==="research");
     tabBtnBonus.classList.toggle("active", tab==="bonus");
     tabBtnStation.classList.toggle("active", tab==="station");
     tabBtnFleet.classList.toggle("active", tab==="fleet");
+    tabBtnMarket.classList.toggle("active", tab==="market");
     tabBtnMining.setAttribute("aria-selected", tab==="mining");
     tabBtnResearch.setAttribute("aria-selected", tab==="research");
     tabBtnBonus.setAttribute("aria-selected", tab==="bonus");
     tabBtnStation.setAttribute("aria-selected", tab==="station");
     tabBtnFleet.setAttribute("aria-selected", tab==="fleet");
+    tabBtnMarket.setAttribute("aria-selected", tab==="market");
   }
   tabBtnMining.addEventListener("click", function(){ selectTab("mining"); });
   tabBtnResearch.addEventListener("click", function(){ selectTab("research"); });
   tabBtnBonus.addEventListener("click", function(){ selectTab("bonus"); });
   tabBtnStation.addEventListener("click", function(){ selectTab("station"); });
   tabBtnFleet.addEventListener("click", function(){ selectTab("fleet"); });
+  tabBtnMarket.addEventListener("click", function(){ selectTab("market"); });
 
   function pulse(i){
     var card = grid.querySelector('.module[data-i="'+i+'"]');
@@ -1630,14 +1934,16 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     } else if(action==="speed"){
       var m2 = state.minerals[i];
       var cost = upgradeCost(cfg.speedBaseCost, m2.speedLevel, mods.upgradeMult);
-      if(state.credits<cost) return;
-      state.credits -= cost; m2.speedLevel++;
+      var costOre = upgradeMineralCost(m2.speedLevel);
+      if(state.credits<cost || m2.stock<costOre) return;
+      state.credits -= cost; m2.stock -= costOre; m2.speedLevel++;
       document.querySelector('.module[data-i="'+i+'"] .btn-upgrade[data-action="speed"] .btn-title').textContent = "⚡ Velocità Lv."+m2.speedLevel;
     } else if(action==="yield"){
       var m3 = state.minerals[i];
       var cost3 = upgradeCost(cfg.yieldBaseCost, m3.yieldLevel, mods.upgradeMult);
-      if(state.credits<cost3) return;
-      state.credits -= cost3; m3.yieldLevel++;
+      var cost3Ore = upgradeMineralCost(m3.yieldLevel);
+      if(state.credits<cost3 || m3.stock<cost3Ore) return;
+      state.credits -= cost3; m3.stock -= cost3Ore; m3.yieldLevel++;
       document.querySelector('.module[data-i="'+i+'"] .btn-upgrade[data-action="yield"] .btn-title').textContent = "⛏ Resa Lv."+m3.yieldLevel;
     } else if(action==="auto"){
       var m4 = state.minerals[i];
@@ -1660,6 +1966,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       renderBonuses();
       renderStation();
       renderFleet();
+      renderMarket();
       saveGame();
       return;
     } else {
@@ -1681,6 +1988,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     renderBonuses();
     renderStation();
     renderFleet();
+    renderMarket();
     saveGame();
   });
 
@@ -1730,6 +2038,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     renderBonuses();
     renderStation();
     renderFleet();
+    renderMarket();
     if(report) showWelcome(report);
 
     updateFixedBarOffsets();
@@ -1752,8 +2061,16 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
       var now = Date.now();
       var dt = (now-lastTick)/1000;
       lastTick = now;
-      var tickMods = computeMods();
-      state.minerals.forEach(function(m,i){ advance(m, mineralConfig(i), dt, tickMods); });
+      if(dt > MAX_FOREGROUND_DT_S){
+        // il tab e' stato in background/sospeso dal sistema (setInterval throttlato o congelato):
+        // questo buco di tempo va trattato come "offline", con la stessa efficienza ridotta,
+        // altrimenti al ritorno in primo piano verrebbe simulato un intero tick a produzione piena.
+        var gapReport = simulateElapsedGap(dt);
+        if(dt >= WELCOME_THRESHOLD_S) showWelcome(gapReport);
+      } else {
+        var tickMods = computeMods();
+        state.minerals.forEach(function(m,i){ advance(m, mineralConfig(i), dt, tickMods); });
+      }
       updateDOM();
     }, 100);
 
@@ -1776,9 +2093,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 
 <script>
 if("serviceWorker" in navigator){
-  window.addEventListener("load", function(){
-    navigator.serviceWorker.register("./service-worker.js");
-  });
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("service-worker.js"); });
 }
 </script>
 </body>
