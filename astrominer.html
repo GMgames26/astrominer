@@ -123,6 +123,9 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 }
 .icon-btn:hover{ color:var(--text); border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
 .icon-btn:focus-visible, .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.cheat-btn{
+  margin-left:auto; flex:0 0 auto; width:26px; height:26px; border-radius:7px; font-size:12px;
+}
 
 /* ---------- section tabs, fisse in basso ---------- */
 .tab-bar{
@@ -429,6 +432,15 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
 .modal .btn{ width:auto; padding:9px 16px; }
 .modal .btn-primary{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
 .modal .btn-danger{ background: rgba(248,113,113,.14); border-color:var(--danger); color:var(--danger); }
+.cheat-input{
+  width:100%; box-sizing:border-box; margin-top:4px; padding:10px 12px; border-radius:9px;
+  border:1px solid var(--line); background:var(--panel-3); color:var(--text);
+  font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.04em;
+}
+.cheat-input:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.cheat-feedback{ margin:8px 0 0; font-size:12.5px; }
+.cheat-feedback.ok{ color:var(--good); }
+.cheat-feedback.bad{ color:var(--danger); }
 
 .footnote{ text-align:center; color:var(--text-faint); font-size:11.5px; margin-top:26px; letter-spacing:.03em; }
 
@@ -451,6 +463,7 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     <div class="cur-chip credits"><span class="ic">💰</span><span class="val" id="credits-value">0</span></div>
     <div class="cur-chip rate"><span class="val" id="rate-value">0 cr/s</span></div>
     <div class="cur-chip frag"><span class="ic">✦</span><span class="val" id="fragments-value">0</span></div>
+    <button class="icon-btn cheat-btn" id="cheat-btn" title="Inserisci codice" aria-label="Inserisci codice">🔑</button>
   </div>
 </div>
 
@@ -543,6 +556,19 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     <div class="modal-actions">
       <button class="btn" id="reset-cancel">Annulla</button>
       <button class="btn btn-danger" id="reset-confirm">Reimposta tutto</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cheat-overlay" hidden>
+  <div class="modal">
+    <h2>Codice</h2>
+    <p>Inserisci un codice per sbloccare un piccolo aiuto (solo per test).</p>
+    <input type="text" id="cheat-input" class="cheat-input" placeholder="Codice" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <p class="cheat-feedback" id="cheat-feedback" hidden></p>
+    <div class="modal-actions">
+      <button class="btn" id="cheat-cancel">Annulla</button>
+      <button class="btn btn-primary" id="cheat-submit">Conferma</button>
     </div>
   </div>
 </div>
@@ -2158,6 +2184,45 @@ button, .btn, .icon-btn, .tab-btn, .research-section-header{
     renderColony();
     saveGame();
   });
+
+  // ---------------- codice di test ----------------
+  // Scorciatoia pensata solo per velocizzare i test: sblocca subito una piccola scorta
+  // di ogni minerale già disponibile e un po' di crediti, senza toccare nient'altro.
+  var CHEAT_CODES = { gio26: { minerals: 200, credits: 1000000 } };
+  var cheatOverlay = document.getElementById("cheat-overlay");
+  var cheatInput = document.getElementById("cheat-input");
+  var cheatFeedback = document.getElementById("cheat-feedback");
+  function openCheatOverlay(){
+    cheatInput.value = "";
+    cheatFeedback.hidden = true;
+    cheatFeedback.className = "cheat-feedback";
+    cheatOverlay.hidden = false;
+    cheatInput.focus();
+  }
+  function closeCheatOverlay(){ cheatOverlay.hidden = true; }
+  function submitCheatCode(){
+    var code = (cheatInput.value||"").trim().toLowerCase();
+    var reward = CHEAT_CODES[code];
+    if(!reward){
+      cheatFeedback.textContent = "Codice non valido.";
+      cheatFeedback.className = "cheat-feedback bad";
+      cheatFeedback.hidden = false;
+      return;
+    }
+    state.minerals.forEach(function(m){ m.stock += reward.minerals; });
+    state.credits += reward.credits;
+    buildModules();
+    updateDOM();
+    saveGame();
+    cheatFeedback.textContent = "Fatto: +"+fmtInt(reward.minerals)+"x ogni minerale sbloccato e +"+fmt(reward.credits)+" cr.";
+    cheatFeedback.className = "cheat-feedback ok";
+    cheatFeedback.hidden = false;
+  }
+  document.getElementById("cheat-btn").addEventListener("click", openCheatOverlay);
+  document.getElementById("cheat-cancel").addEventListener("click", closeCheatOverlay);
+  document.getElementById("cheat-submit").addEventListener("click", submitCheatCode);
+  cheatOverlay.addEventListener("click", function(ev){ if(ev.target===cheatOverlay) closeCheatOverlay(); });
+  cheatInput.addEventListener("keydown", function(ev){ if(ev.key==="Enter") submitCheatCode(); });
 
   // ---------------- welcome-back report ----------------
   function showWelcome(report){
